@@ -8,12 +8,42 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { 
+            height: 100%; 
+            width: 100%;
+            overflow-x: hidden;
+        }
         body { 
             font-family: 'Inter', sans-serif; 
-            background: linear-gradient(180deg, #f3f4f6 0%, #f7f9fc 100px, #f7f9fc 100%);
+            background: linear-gradient(135deg, 
+                rgba(102, 126, 234, 0.08) 0%, 
+                rgba(118, 75, 162, 0.08) 25%, 
+                rgba(240, 147, 251, 0.08) 50%, 
+                rgba(79, 172, 254, 0.08) 75%, 
+                rgba(0, 242, 254, 0.08) 100%),
+                linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+            background-size: 400% 400%, 100% 100%;
+            animation: gradientShift 15s ease infinite;
             padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%, 0% 0%; }
+            50% { background-position: 100% 50%, 0% 0%; }
+            100% { background-position: 0% 50%, 0% 0%; }
+        }
+        .card-shadow { 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .card-shadow:hover {
+            box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.15), 0 12px 15px -6px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
         /* Custom scrollbar for better mobile feel */
         .scrollable-cards::-webkit-scrollbar { display: none; }
         .scrollable-cards { -ms-overflow-style: none; scrollbar-width: none; }
@@ -75,6 +105,48 @@
         <div class="flex justify-end space-x-3">
             <button onclick="closeRenameModal()" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-150">Cancel</button>
             <button onclick="updateCardName()" class="bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-150 font-medium">Save Name</button>
+        </div>
+    </div>
+</div>
+
+<!-- View Card Rules Modal -->
+<div id="view-rules-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50" onclick="closeViewRulesModal()">
+    <div class="bg-white rounded-2xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col shadow-2xl" onclick="event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-t-2xl flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="w-8 h-8 text-white mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                    <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
+                </svg>
+                <h3 class="text-xl font-bold text-white" id="view-rules-card-name">Card Rules</h3>
+            </div>
+            <button onclick="closeViewRulesModal()" class="text-white hover:bg-white/20 rounded-lg p-2 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-6 overflow-y-auto flex-1" id="view-rules-content">
+            <!-- Rules content will be inserted here -->
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-between items-center">
+            <!-- Reload Button -->
+            <button id="modal-reload-btn" onclick="reloadRulesInModal()" class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-2 px-5 rounded-lg hover:from-indigo-700 hover:to-blue-700 transition duration-200 font-semibold flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                </svg>
+                <span>Reload Rules</span>
+            </button>
+            
+            <!-- Close Button -->
+            <button onclick="closeViewRulesModal()" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white py-2 px-6 rounded-lg hover:from-gray-600 hover:to-gray-700 transition duration-200 font-semibold">
+                Close
+            </button>
         </div>
     </div>
 </div>
@@ -193,10 +265,11 @@
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('auth-status').innerText = 'Ready (Local Storage)';
             loadCardsFromStorage();
             updateCardCount();
             checkApiKeyStatus();
+            // Set Advisor as default view
+            navigateTo('advisor');
         });
 
         // Check and display API key status
@@ -328,18 +401,18 @@
             }
         }
 
-        // --- UTILITY FUNCTIONS ---
-        function showNotification(message, isError) {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `p-3 rounded-lg text-sm mb-4 transition-opacity duration-300 ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
-            notification.classList.remove('opacity-0', 'hidden');
-            setTimeout(() => {
-                notification.classList.add('opacity-0');
-                setTimeout(() => notification.classList.add('hidden'), 300);
-            }, 3000);
-        }
-        
+    // --- UTILITY FUNCTIONS ---
+    function showNotification(message, isError) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `p-3 rounded-lg text-sm mb-4 transition-opacity duration-300 ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+        notification.classList.remove('opacity-0', 'hidden');
+        setTimeout(() => {
+            notification.classList.add('opacity-0');
+            setTimeout(() => notification.classList.add('hidden'), 300);
+        }, 3000);
+    }
+
         // Display API usage statistics as bottom toast
         function displayUsageStats(usage) {
             if (!usage) return;
@@ -376,10 +449,10 @@
         }
 
         // ENHANCED: Markdown to HTML Converter with Beautiful Styling + Table Support
-        function markdownToHtml(markdown) {
-            if (!markdown) return '';
-            let html = markdown;
-            
+    function markdownToHtml(markdown) {
+        if (!markdown) return '';
+        let html = markdown;
+
             // 0a. COMPREHENSIVE LaTeX CLEANUP
             // Common LaTeX math symbols
             html = html.replace(/\$?\\times\$?/g, '×'); // \times or $\times$
@@ -464,8 +537,8 @@
                 
                 // Skip if already HTML tagged
                 if (paragraph.match(/^<(h1|h2|h3|pre|ul|ol|div)/)) {
-                    return paragraph;
-                }
+                return paragraph;
+            }
                 
                 // Check if this paragraph contains list items
                 if (paragraph.match(/^(\*|-|\d+\.) /m)) {
@@ -505,20 +578,7 @@
     }
 
     // NEW: Toggle Rules Visibility
-    window.toggleRules = function(cardId) {
-        const rulesContent = document.getElementById(`rules-content-${cardId}`);
-        const toggleIcon = document.getElementById(`toggle-icon-${cardId}`);
-
-        if (rulesContent.classList.contains('hidden')) {
-            rulesContent.classList.remove('hidden');
-            rulesContent.classList.add('pt-2', 'border-t', 'border-gray-100'); // Add border/padding when visible
-            toggleIcon.textContent = '▲'; // Up arrow
-        } else {
-            rulesContent.classList.add('hidden');
-            rulesContent.classList.remove('pt-2', 'border-t', 'border-gray-100');
-            toggleIcon.textContent = '▼'; // Down arrow
-        }
-    };
+    // Old toggleRules function removed - now using modal view instead
 
     // NEW: Refresh Card Rules
     window.refreshCardRules = async function(cardId, cardName) {
@@ -530,32 +590,159 @@
             
         const refreshButton = document.getElementById(`refresh-btn-${cardId}`);
 
-            refreshButton.disabled = true;
-            refreshButton.classList.add('opacity-50', 'cursor-not-allowed', 'animate-spin');
-            
-            const systemPrompt = `You are a financial information specialist with access to real-time web search. Your task is to:
+        refreshButton.disabled = true;
+        refreshButton.classList.add('opacity-50', 'cursor-not-allowed', 'animate-spin');
+
+            const systemPrompt = `You are a financial information specialist with access to real-time web search via Google Search. Your task is to:
                 1. Search the OFFICIAL BANK WEBSITE for the "${cardName}" credit card (e.g., HDFC Bank, SBI Card, ICICI, Axis Bank official sites).
                 2. Verify information from the bank's official reward program terms and conditions.
-                3. Provide a MOBILE-FRIENDLY summary using BULLET POINTS (no tables!) of verified information:
-                   - Reward Point (RP) earning rate per ₹100 or ₹150 spent (or Cashback %).
-                   - Accelerated/Bonus categories (e.g., Dining, Utility, Travel, Amazon).
-                   - Key Exclusions (e.g., Rent, Insurance, Fuel, Wallet loads).
-                   - Redemption value (e.g., 1 RP = ₹0.25).
-                4. FORMATTING RULES:
+                3. Provide a COMPREHENSIVE, COMPLETE, MOBILE-FRIENDLY summary using BULLET POINTS (no tables!) of ALL verified benefits:
+                   
+                   **MUST INCLUDE ALL OF THE FOLLOWING CATEGORIES (if available):**
+                   
+                   **BASE REWARDS:**
+                   - Base Reward Point (RP) earning rate per ₹100 or ₹150 spent (or Cashback %)
+                   - Milestone benefits and annual spend bonuses
+                   
+                   **HEALTHCARE & MEDICAL:**
+                   - Pharmacy purchases (MedPlus, Apollo Pharmacy, Netmeds, 1mg)
+                   - Hospital and clinic payments
+                   - Health insurance premium payments
+                   - Medical equipment and supplies
+                   - Diagnostic tests and health checkups
+                   
+                   **GROCERIES & SUPERMARKETS:**
+                   - Supermarket purchases (Big Bazaar, D-Mart, Reliance Fresh, More, Spencer's)
+                   - Online grocery (BigBasket, Grofers, Amazon Pantry, Swiggy Instamart, Blinkit)
+                   - Kirana stores and local shops
+                   
+                   **FUEL & TRANSPORTATION:**
+                   - Petrol/Diesel fuel stations (BPCL, HPCL, Indian Oil, Shell, etc.)
+                   - EV charging stations
+                   - Fuel surcharge waiver
+                   - Toll payments
+                   - Metro/Local train recharge
+                   
+                   **DINING & FOOD:**
+                   - Restaurant dining (fine dining, casual, QSR)
+                   - Food delivery apps (Swiggy, Zomato, Dunzo)
+                   - Cafes and bakeries (Starbucks, CCD, etc.)
+                   - Cloud kitchens and food courts
+                   - Dining memberships (Zomato Gold, Dineout Passport)
+                   
+                   **ENTERTAINMENT:**
+                   - **Movie Tickets:** BookMyShow offers (1+1, discounts), PVR, INOX, Cinepolis
+                   - OTT Subscriptions (Netflix, Amazon Prime, Disney+, Hotstar, Zee5, SonyLiv)
+                   - Concert and event tickets
+                   - Amusement parks and gaming zones
+                   - Theater and live shows
+                   
+                   **TRAVEL:**
+                   - **Flight Tickets:** Domestic and international bookings, airline miles
+                   - **Hotel Bookings:** MakeMyTrip, Goibibo, Booking.com, OYO, etc.
+                   - Travel packages and holiday bookings
+                   - Airport lounge access (domestic and international)
+                   - Travel insurance (complimentary coverage)
+                   - Cab bookings (Uber, Ola, Meru)
+                   - Railway ticket bookings (IRCTC)
+                   - Bus bookings (RedBus, etc.)
+                   - Forex and foreign currency markup
+                   
+                   **ONLINE SHOPPING:**
+                   - E-commerce platforms (Amazon, Flipkart, Myntra, Ajio)
+                   - Fashion and apparel websites
+                   - Electronics online (Croma, Vijay Sales online)
+                   - Specialized online stores (Nykaa, FirstCry, etc.)
+                   
+                   **OFFLINE SHOPPING:**
+                   - Department stores and malls
+                   - Electronics and appliances stores
+                   - Fashion and apparel outlets
+                   - Jewelry stores
+                   - Furniture and home decor
+                   - Branded showrooms
+                   
+                   **UTILITIES & BILLS:**
+                   - Electricity bills
+                   - Water bills
+                   - Gas bills (piped and cylinder)
+                   - Broadband and internet bills
+                   - Mobile recharge and postpaid bills
+                   - DTH and cable TV recharge
+                   
+                   **INSURANCE:**
+                   - Life insurance premium
+                   - Health insurance premium
+                   - Vehicle insurance
+                   - Home insurance
+                   
+                   **EDUCATION:**
+                   - School and college fees
+                   - Coaching and tuition fees
+                   - Online courses and certifications
+                   
+                   **LIFESTYLE & WELLNESS:**
+                   - Gym and fitness memberships
+                   - Spa and salon services
+                   - Golf course access
+                   - Yoga and wellness centers
+                   
+                   **OTHERS:**
+                   - Concierge services
+                   - Priority customer care
+                   - Redemption value (e.g., 1 RP = ₹0.25)
+                   - Key Exclusions (categories with 0 rewards or restrictions)
+                   - Annual fee and fee waiver conditions
+                   - Welcome/Joining bonus and offers
+                   
+                4. COMPLETENESS RULES (CRITICAL):
+                   - DO NOT TRUNCATE or summarize - include ALL offers found on the official website
+                   - Check EVERY category listed above - don't skip categories
+                   - If there are 20 benefits, list all 20 - don't leave anything out
+                   - Be especially thorough with:
+                     * Movie ticket offers (BookMyShow 1+1) - present in most premium cards
+                     * Grocery rewards - often have special accelerated rates
+                     * Fuel surcharge waivers - common benefit
+                     * Healthcare/Pharmacy - increasingly popular benefit
+                   - Include monthly/quarterly/annual caps for each category
+                   - Mention if a category is EXCLUDED (0 rewards) - this is important info too
+                   
+                5. FORMATTING RULES:
                    - Use simple bullet points (- or *), NOT tables or complex formatting
-                   - Use bold (**text**) for emphasis
+                   - Use bold (**text**) for emphasis on offer names
                    - Keep lines short for mobile readability
                    - Use clear section headings (### Heading)
                    - ABSOLUTELY NO LaTeX: no $...$ math mode, no \\text{}, no \\times, no \\$
                    - For multiplication use "×" or "x", NOT \\times or $\\times$
                    - Write as plain text/Markdown only
-                5. CURRENCY RULES (CRITICAL):
+                   
+                6. CURRENCY RULES (CRITICAL):
                    - ALL amounts must be in Indian Rupees (₹) ONLY
                    - Never use $ or dollars - this is for INDIAN credit cards
                    - Example: ₹100, ₹1,000, ₹50 cashback
-                6. Use ONLY official bank sources. If not found, state clearly.`;
+                   
+                7. SOURCE VERIFICATION:
+                   - Use ONLY official bank sources as the source of truth
+                   - If specific benefit not found on official site, don't make it up
+                   - But be thorough - check rewards page, terms & conditions, feature highlights`;
             
-            const userQuery = `Search the official bank website for "${cardName}" credit card (INDIAN market) and provide the current reward rules in RUPEES (₹). Format as simple bullet points for mobile. NO TABLES. NO LATEX.`;
+            const userQuery = `Search the official "${cardName}" bank website and fetch COMPLETE, COMPREHENSIVE reward rules for ALL spending categories:
+
+MUST COVER (if available):
+- Healthcare/Medical/Pharmacy
+- Groceries/Supermarkets
+- Fuel/Petrol stations
+- Dining/Restaurants/Food delivery
+- Entertainment (Movie tickets - BookMyShow 1+1 offers, OTT subscriptions)
+- Travel (Flights, Hotels, Lounge access, Cabs)
+- Online Shopping (Amazon, Flipkart, etc.)
+- Offline Shopping (Malls, Electronics, Fashion)
+- Utilities (Bills, Recharge)
+- Insurance premiums
+- Education fees
+- Lifestyle/Wellness
+
+DO NOT TRUNCATE or skip any category - list ALL offers, cashback rates, and reward points for EVERY category found on official website. Use bullet points, NO TABLES. Format in RUPEES (₹) for INDIAN market.`;
 
         const response = await fetchGeminiResponse(systemPrompt, userQuery);
 
@@ -567,16 +754,16 @@
                         cardList[cardIndex].rules = response.text;
                         saveCardsToStorage();
                         renderCards();
-                        showNotification(`Rules for '${cardName}' updated successfully!`, false);
+                showNotification(`Rules for '${cardName}' updated successfully!`, false);
                         displayUsageStats(response.usage);
                     }
-                } catch (error) {
-                    console.error("Error updating card rules:", error);
-                    showNotification("Failed to update card rules.", true);
-                }
-            } else {
-                showNotification(`Failed to retrieve reliable new rules for '${cardName}'.`, true);
+            } catch (error) {
+                console.error("Error updating card rules:", error);
+                showNotification("Failed to update card rules.", true);
             }
+        } else {
+            showNotification(`Failed to retrieve reliable new rules for '${cardName}'.`, true);
+        }
 
         refreshButton.disabled = false;
         refreshButton.classList.remove('opacity-50', 'cursor-not-allowed', 'animate-spin');
@@ -620,6 +807,103 @@
 
     window.closeRenameModal = function() {
         document.getElementById('rename-modal').classList.add('hidden');
+    };
+
+    // --- VIEW RULES MODAL FUNCTIONS ---
+    let currentViewingCardId = null; // Store the card ID for reload functionality
+    
+    window.openViewRulesModal = function(cardId, cardName) {
+        const card = cardList.find(c => c.id === cardId);
+        if (!card) {
+            showNotification("Card not found.", true);
+            return;
+        }
+        
+        // Store the card ID for reload functionality
+        currentViewingCardId = cardId;
+        
+        // Set the card name in the modal header
+        document.getElementById('view-rules-card-name').textContent = decodeURIComponent(cardName);
+        
+        // Render the rules with markdown formatting
+        const renderedRules = markdownToHtml(card.rules);
+        document.getElementById('view-rules-content').innerHTML = renderedRules;
+        
+        // Show the modal
+        document.getElementById('view-rules-modal').classList.remove('hidden');
+    };
+
+    window.closeViewRulesModal = function() {
+        document.getElementById('view-rules-modal').classList.add('hidden');
+        currentViewingCardId = null; // Clear the stored card ID
+    };
+
+    window.reloadRulesInModal = async function() {
+        if (!currentViewingCardId) {
+            showNotification("No card selected.", true);
+            return;
+        }
+        
+        const card = cardList.find(c => c.id === currentViewingCardId);
+        if (!card) {
+            showNotification("Card not found.", true);
+            return;
+        }
+        
+        const reloadBtn = document.getElementById('modal-reload-btn');
+        const originalContent = reloadBtn.innerHTML;
+        
+        try {
+            // Show loading state in button
+            reloadBtn.disabled = true;
+            reloadBtn.innerHTML = `
+                <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Reloading...</span>
+            `;
+            
+            // Show loading in content area
+            document.getElementById('view-rules-content').innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 text-gray-500">
+                    <svg class="animate-spin h-12 w-12 text-indigo-600 mb-4" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-lg font-semibold">Fetching latest rules from bank website...</p>
+                    <p class="text-sm mt-2">This may take a few seconds</p>
+                </div>
+            `;
+            
+            // Use the same logic as refreshCardRules function
+            await refreshCardRules(currentViewingCardId, card.name);
+            
+            // After successful refresh, update the modal content with new rules
+            const updatedCard = cardList.find(c => c.id === currentViewingCardId);
+            if (updatedCard) {
+                const renderedRules = markdownToHtml(updatedCard.rules);
+                document.getElementById('view-rules-content').innerHTML = renderedRules;
+            }
+        } catch (error) {
+            console.error("Error reloading rules in modal:", error);
+            showNotification(`❌ Failed to reload rules: ${error.message}`, true);
+            
+            // Show error in modal
+            document.getElementById('view-rules-content').innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 text-red-600">
+                    <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-lg font-semibold">Failed to reload rules</p>
+                    <p class="text-sm mt-2 text-gray-600">${error.message}</p>
+                </div>
+            `;
+        } finally {
+            // Restore button state
+            reloadBtn.disabled = false;
+            reloadBtn.innerHTML = originalContent;
+        }
     };
 
     window.updateCardName = async function() {
@@ -757,32 +1041,159 @@
             return;
         }
 
-            saveButton.disabled = true;
+        saveButton.disabled = true;
             saveButton.textContent = 'Searching bank website...';
 
-            const systemPrompt = `You are a financial information specialist with access to real-time web search. Your task is to:
+            const systemPrompt = `You are a financial information specialist with access to real-time web search via Google Search. Your task is to:
                 1. Search the OFFICIAL BANK WEBSITE for the "${cardName}" credit card (e.g., HDFC Bank, SBI Card, ICICI, Axis Bank official sites).
                 2. Verify information from the bank's official reward program terms and conditions.
-                3. Provide a MOBILE-FRIENDLY summary using BULLET POINTS (no tables!) of verified information:
-                   - Reward Point (RP) earning rate per ₹100 or ₹150 spent (or Cashback %).
-                   - Accelerated/Bonus categories (e.g., Dining, Utility, Travel, Amazon).
-                   - Key Exclusions (e.g., Rent, Insurance, Fuel, Wallet loads).
-                   - Redemption value (e.g., 1 RP = ₹0.25).
-                4. FORMATTING RULES:
+                3. Provide a COMPREHENSIVE, COMPLETE, MOBILE-FRIENDLY summary using BULLET POINTS (no tables!) of ALL verified benefits:
+                   
+                   **MUST INCLUDE ALL OF THE FOLLOWING CATEGORIES (if available):**
+                   
+                   **BASE REWARDS:**
+                   - Base Reward Point (RP) earning rate per ₹100 or ₹150 spent (or Cashback %)
+                   - Milestone benefits and annual spend bonuses
+                   
+                   **HEALTHCARE & MEDICAL:**
+                   - Pharmacy purchases (MedPlus, Apollo Pharmacy, Netmeds, 1mg)
+                   - Hospital and clinic payments
+                   - Health insurance premium payments
+                   - Medical equipment and supplies
+                   - Diagnostic tests and health checkups
+                   
+                   **GROCERIES & SUPERMARKETS:**
+                   - Supermarket purchases (Big Bazaar, D-Mart, Reliance Fresh, More, Spencer's)
+                   - Online grocery (BigBasket, Grofers, Amazon Pantry, Swiggy Instamart, Blinkit)
+                   - Kirana stores and local shops
+                   
+                   **FUEL & TRANSPORTATION:**
+                   - Petrol/Diesel fuel stations (BPCL, HPCL, Indian Oil, Shell, etc.)
+                   - EV charging stations
+                   - Fuel surcharge waiver
+                   - Toll payments
+                   - Metro/Local train recharge
+                   
+                   **DINING & FOOD:**
+                   - Restaurant dining (fine dining, casual, QSR)
+                   - Food delivery apps (Swiggy, Zomato, Dunzo)
+                   - Cafes and bakeries (Starbucks, CCD, etc.)
+                   - Cloud kitchens and food courts
+                   - Dining memberships (Zomato Gold, Dineout Passport)
+                   
+                   **ENTERTAINMENT:**
+                   - **Movie Tickets:** BookMyShow offers (1+1, discounts), PVR, INOX, Cinepolis
+                   - OTT Subscriptions (Netflix, Amazon Prime, Disney+, Hotstar, Zee5, SonyLiv)
+                   - Concert and event tickets
+                   - Amusement parks and gaming zones
+                   - Theater and live shows
+                   
+                   **TRAVEL:**
+                   - **Flight Tickets:** Domestic and international bookings, airline miles
+                   - **Hotel Bookings:** MakeMyTrip, Goibibo, Booking.com, OYO, etc.
+                   - Travel packages and holiday bookings
+                   - Airport lounge access (domestic and international)
+                   - Travel insurance (complimentary coverage)
+                   - Cab bookings (Uber, Ola, Meru)
+                   - Railway ticket bookings (IRCTC)
+                   - Bus bookings (RedBus, etc.)
+                   - Forex and foreign currency markup
+                   
+                   **ONLINE SHOPPING:**
+                   - E-commerce platforms (Amazon, Flipkart, Myntra, Ajio)
+                   - Fashion and apparel websites
+                   - Electronics online (Croma, Vijay Sales online)
+                   - Specialized online stores (Nykaa, FirstCry, etc.)
+                   
+                   **OFFLINE SHOPPING:**
+                   - Department stores and malls
+                   - Electronics and appliances stores
+                   - Fashion and apparel outlets
+                   - Jewelry stores
+                   - Furniture and home decor
+                   - Branded showrooms
+                   
+                   **UTILITIES & BILLS:**
+                   - Electricity bills
+                   - Water bills
+                   - Gas bills (piped and cylinder)
+                   - Broadband and internet bills
+                   - Mobile recharge and postpaid bills
+                   - DTH and cable TV recharge
+                   
+                   **INSURANCE:**
+                   - Life insurance premium
+                   - Health insurance premium
+                   - Vehicle insurance
+                   - Home insurance
+                   
+                   **EDUCATION:**
+                   - School and college fees
+                   - Coaching and tuition fees
+                   - Online courses and certifications
+                   
+                   **LIFESTYLE & WELLNESS:**
+                   - Gym and fitness memberships
+                   - Spa and salon services
+                   - Golf course access
+                   - Yoga and wellness centers
+                   
+                   **OTHERS:**
+                   - Concierge services
+                   - Priority customer care
+                   - Redemption value (e.g., 1 RP = ₹0.25)
+                   - Key Exclusions (categories with 0 rewards or restrictions)
+                   - Annual fee and fee waiver conditions
+                   - Welcome/Joining bonus and offers
+                   
+                4. COMPLETENESS RULES (CRITICAL):
+                   - DO NOT TRUNCATE or summarize - include ALL offers found on the official website
+                   - Check EVERY category listed above - don't skip categories
+                   - If there are 20 benefits, list all 20 - don't leave anything out
+                   - Be especially thorough with:
+                     * Movie ticket offers (BookMyShow 1+1) - present in most premium cards
+                     * Grocery rewards - often have special accelerated rates
+                     * Fuel surcharge waivers - common benefit
+                     * Healthcare/Pharmacy - increasingly popular benefit
+                   - Include monthly/quarterly/annual caps for each category
+                   - Mention if a category is EXCLUDED (0 rewards) - this is important info too
+                   
+                5. FORMATTING RULES:
                    - Use simple bullet points (- or *), NOT tables or complex formatting
-                   - Use bold (**text**) for emphasis
+                   - Use bold (**text**) for emphasis on offer names
                    - Keep lines short for mobile readability
                    - Use clear section headings (### Heading)
                    - ABSOLUTELY NO LaTeX: no $...$ math mode, no \\text{}, no \\times, no \\$
                    - For multiplication use "×" or "x", NOT \\times or $\\times$
                    - Write as plain text/Markdown only
-                5. CURRENCY RULES (CRITICAL):
+                   
+                6. CURRENCY RULES (CRITICAL):
                    - ALL amounts must be in Indian Rupees (₹) ONLY
                    - Never use $ or dollars - this is for INDIAN credit cards
                    - Example: ₹100, ₹1,000, ₹50 cashback
-                6. Use ONLY official bank sources. If not found, state clearly.`;
+                   
+                7. SOURCE VERIFICATION:
+                   - Use ONLY official bank sources as the source of truth
+                   - If specific benefit not found on official site, don't make it up
+                   - But be thorough - check rewards page, terms & conditions, feature highlights`;
             
-            const userQuery = `Search the official bank website for "${cardName}" credit card (INDIAN market) and provide the current reward rules in RUPEES (₹). Format as simple bullet points for mobile. NO TABLES. NO LATEX.`;
+            const userQuery = `Search the official "${cardName}" bank website and fetch COMPLETE, COMPREHENSIVE reward rules for ALL spending categories:
+
+MUST COVER (if available):
+- Healthcare/Medical/Pharmacy
+- Groceries/Supermarkets
+- Fuel/Petrol stations
+- Dining/Restaurants/Food delivery
+- Entertainment (Movie tickets - BookMyShow 1+1 offers, OTT subscriptions)
+- Travel (Flights, Hotels, Lounge access, Cabs)
+- Online Shopping (Amazon, Flipkart, etc.)
+- Offline Shopping (Malls, Electronics, Fashion)
+- Utilities (Bills, Recharge)
+- Insurance premiums
+- Education fees
+- Lifestyle/Wellness
+
+DO NOT TRUNCATE or skip any category - list ALL offers, cashback rates, and reward points for EVERY category found on official website. Use bullet points, NO TABLES. Format in RUPEES (₹) for INDIAN market.`;
 
             const response = await fetchGeminiResponse(systemPrompt, userQuery);
 
@@ -843,7 +1254,14 @@
 
             cardEl.innerHTML = `
                 <div class="flex justify-between items-start">
-                    <div class="flex-grow">
+                    <div class="flex-grow flex items-start">
+                        <!-- Card Icon -->
+                        <svg class="w-6 h-6 text-indigo-600 mr-2 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                            <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
+                        </svg>
+                        
+                        <div>
                         <h3 class="font-bold text-lg text-gray-900 flex items-center">
                             ${card.name}
 
@@ -854,34 +1272,37 @@
                                 </svg>
                             </button>
                         </h3>
-
-                        <button onclick="toggleRules('${card.id}')" class="text-sm text-indigo-600 hover:underline mt-1">
-                            View Rules <span id="toggle-icon-${card.id}" class="ml-1 transition duration-150 transform inline-block">▼</span>
-                        </button>
+                            <p class="text-xs text-gray-500 mt-1">Click "View" to see full rules</p>
+                        </div>
                     </div>
 
-                    <!-- Action Buttons (Refresh and Delete) -->
+                    <!-- Action Buttons (View, Refresh, Delete) -->
                     <div class="flex space-x-2 ml-4">
-                            <!-- Refresh Button (Circular Arrow - Indigo) -->
-                            <button id="refresh-btn-${card.id}" onclick="refreshCardRules('${card.id}', decodeURIComponent('${encodedCardName}'))" class="text-indigo-600 hover:text-indigo-700 p-1.5 rounded-full hover:bg-indigo-50 transition duration-150" title="Update Card Rules from Bank Website">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                        <!-- View Rules Button (Eye Icon - Purple) -->
+                        <button onclick="openViewRulesModal('${card.id}', decodeURIComponent('${encodedCardName}'))" class="text-purple-600 hover:text-purple-700 p-1.5 rounded-full hover:bg-purple-50 transition duration-150" title="View Full Rules">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
                             </svg>
                         </button>
 
-                            <!-- Delete Button (Trash Icon - Red) -->
-                            <button id="delete-btn-${card.id}" onclick="deleteCard('${card.id}', decodeURIComponent('${encodedCardName}'))" class="text-red-600 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 transition duration-150" title="Delete Card">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                        <!-- Refresh Button (Circular Arrow - Indigo) -->
+                        <button id="refresh-btn-${card.id}" onclick="refreshCardRules('${card.id}', decodeURIComponent('${encodedCardName}'))" class="text-indigo-600 hover:text-indigo-700 p-1.5 rounded-full hover:bg-indigo-50 transition duration-150" title="Update Card Rules from Bank Website">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                            </svg>
+                        </button>
+
+                        <!-- Delete Button (Trash Icon - Red) -->
+                        <button id="delete-btn-${card.id}" onclick="deleteCard('${card.id}', decodeURIComponent('${encodedCardName}'))" class="text-red-600 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 transition duration-150" title="Delete Card">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
                             </svg>
                         </button>
                     </div>
-                </div>
-                <div id="rules-content-${card.id}" class="hidden text-sm text-gray-600 p-3 pt-3 mt-3 border-t border-gray-200">
-                    ${renderedRules}
                 </div>
             `;
             container.appendChild(cardEl);
@@ -1017,80 +1438,139 @@
             }
     }
 
+        
+        // Menu Navigation Functions
+        window.openMenu = function() {
+            document.getElementById('side-menu').classList.remove('hidden');
+        };
+
+        window.closeMenu = function() {
+            document.getElementById('side-menu').classList.add('hidden');
+        };
+
+        window.navigateTo = function(view) {
+            // Hide all views
+            document.getElementById('advisor-tab-content').classList.add('hidden');
+            document.getElementById('cards-tab-content').classList.add('hidden');
+            
+            // Show selected view
+            if (view === 'advisor') {
+                document.getElementById('advisor-tab-content').classList.remove('hidden');
+            } else if (view === 'cards') {
+                document.getElementById('advisor-tab-content').classList.add('hidden');
+                document.getElementById('cards-tab-content').classList.remove('hidden');
+            }
+            
+            // Close menu
+            closeMenu();
+        };
 </script>
 
-<!-- HEADER -->
-    <header class="w-full max-w-2xl py-4 px-4 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <!-- App Icon -->
-            <svg class="w-12 h-12 flex-shrink-0" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="cardGradHeader" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
-                <rect x="80" y="140" width="352" height="220" rx="24" fill="url(#cardGradHeader)"/>
-                <rect x="80" y="180" width="352" height="50" fill="#1f2937" opacity="0.7"/>
-                <rect x="120" y="270" width="60" height="48" rx="6" fill="#fbbf24"/>
-                <line x1="130" y1="275" x2="130" y2="313" stroke="#1f2937" stroke-width="2.5"/>
-                <line x1="142" y1="275" x2="142" y2="313" stroke="#1f2937" stroke-width="2.5"/>
-                <line x1="154" y1="275" x2="154" y2="313" stroke="#1f2937" stroke-width="2.5"/>
-                <line x1="166" y1="275" x2="166" y2="313" stroke="#1f2937" stroke-width="2.5"/>
-                <circle cx="120" cy="340" r="5" fill="#ffffff"/>
-                <circle cx="138" cy="340" r="5" fill="#ffffff"/>
-                <circle cx="156" cy="340" r="5" fill="#ffffff"/>
-                <circle cx="174" cy="340" r="5" fill="#ffffff"/>
-                <g transform="translate(380, 150)">
-                    <path d="M 0,-35 L 6,-12 L 30,-6 L 6,0 L 0,24 L -6,0 L -30,-6 L -6,-12 Z" fill="#fbbf24"/>
-                    <circle cx="0" cy="-6" r="4" fill="#ffffff"/>
-                </g>
-                <rect x="340" y="300" width="70" height="40" rx="20" fill="#10b981"/>
-                <text x="375" y="327" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">AI</text>
-        </svg>
-            
-            <!-- App Name -->
-            <div>
-                <h1 class="text-xl font-bold text-gray-900">Card Advisor</h1>
-                <p class="text-xs text-gray-500" id="auth-status">Initializing...</p>
+<!-- Side Menu -->
+<div id="side-menu" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50" onclick="closeMenu()">
+    <div class="bg-gradient-to-br from-white to-indigo-50 w-72 h-full shadow-2xl" onclick="event.stopPropagation()">
+        <div class="p-6 bg-gradient-to-r from-indigo-600 to-purple-600">
+            <div class="flex items-center mb-2">
+                <svg class="w-10 h-10 flex-shrink-0 mr-3" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="cardGradMenu" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect x="80" y="140" width="352" height="220" rx="24" fill="url(#cardGradMenu)"/>
+                    <rect x="80" y="180" width="352" height="50" fill="#1f2937" opacity="0.7"/>
+                    <rect x="120" y="270" width="60" height="48" rx="6" fill="#fbbf24"/>
+                    <line x1="130" y1="275" x2="130" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+                    <line x1="142" y1="275" x2="142" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+                    <line x1="154" y1="275" x2="154" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+                    <line x1="166" y1="275" x2="166" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+                    <circle cx="120" cy="340" r="5" fill="#ffffff"/>
+                    <circle cx="138" cy="340" r="5" fill="#ffffff"/>
+                    <circle cx="156" cy="340" r="5" fill="#ffffff"/>
+                    <circle cx="174" cy="340" r="5" fill="#ffffff"/>
+                    <g transform="translate(380, 150)">
+                        <path d="M 0,-35 L 6,-12 L 30,-6 L 6,0 L 0,24 L -6,0 L -30,-6 L -6,-12 Z" fill="#fbbf24"/>
+                        <circle cx="0" cy="-6" r="4" fill="#ffffff"/>
+                    </g>
+                    <rect x="340" y="300" width="70" height="40" rx="20" fill="#10b981"/>
+                    <text x="375" y="327" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">AI</text>
+                </svg>
+                <div>
+                    <h2 class="text-xl font-bold text-white drop-shadow-md">Card Advisor</h2>
+                    <p class="text-xs text-indigo-100 font-medium">Make every spend rewarding</p>
+                </div>
             </div>
         </div>
+        <nav class="p-4 space-y-2">
+            <button onclick="navigateTo('advisor')" class="w-full flex items-center p-3 text-left text-gray-700 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:text-white rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-105">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                <span class="font-semibold">AI Advisor</span>
+            </button>
+            <button onclick="navigateTo('cards')" class="w-full flex items-center p-3 text-left text-gray-700 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:text-white rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-105">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                    <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
+                </svg>
+                <span class="font-semibold">My Cards</span>
+            </button>
+            <button onclick="openSettingsModal(); closeMenu();" class="w-full flex items-center p-3 text-left text-gray-700 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:text-white rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-105">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                </svg>
+                <span class="font-semibold">Settings</span>
+            </button>
+        </nav>
+    </div>
+</div>
+
+<!-- HEADER -->
+<header class="w-full max-w-2xl py-4 px-4 flex items-center bg-white/80 backdrop-blur-sm shadow-md rounded-xl mb-4">
+    <!-- Menu Button -->
+    <button onclick="openMenu()" class="p-2 text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 rounded-lg transition-all duration-200 mr-3 shadow-sm hover:shadow-lg transform hover:scale-110" title="Menu">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    </button>
+    
+    <div class="flex items-center space-x-2">
+        <!-- App Icon -->
+        <svg class="w-10 h-10 flex-shrink-0" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="cardGradHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <rect x="80" y="140" width="352" height="220" rx="24" fill="url(#cardGradHeader)"/>
+            <rect x="80" y="180" width="352" height="50" fill="#1f2937" opacity="0.7"/>
+            <rect x="120" y="270" width="60" height="48" rx="6" fill="#fbbf24"/>
+            <line x1="130" y1="275" x2="130" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+            <line x1="142" y1="275" x2="142" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+            <line x1="154" y1="275" x2="154" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+            <line x1="166" y1="275" x2="166" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+            <circle cx="120" cy="340" r="5" fill="#ffffff"/>
+            <circle cx="138" cy="340" r="5" fill="#ffffff"/>
+            <circle cx="156" cy="340" r="5" fill="#ffffff"/>
+            <circle cx="174" cy="340" r="5" fill="#ffffff"/>
+            <g transform="translate(380, 150)">
+                <path d="M 0,-35 L 6,-12 L 30,-6 L 6,0 L 0,24 L -6,0 L -30,-6 L -6,-12 Z" fill="#fbbf24"/>
+                <circle cx="0" cy="-6" r="4" fill="#ffffff"/>
+            </g>
+            <rect x="340" y="300" width="70" height="40" rx="20" fill="#10b981"/>
+            <text x="375" y="327" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">AI</text>
+        </svg>
         
-        <!-- Settings Button -->
-        <button onclick="openSettingsModal()" class="p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition duration-150" title="Settings">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
-            </svg>
-        </button>
+        <h1 class="text-lg font-bold text-gray-900">Card Advisor</h1>
+    </div>
 </header>
 
-    <div id="notification" class="w-full max-w-2xl opacity-0 hidden" role="alert"></div>
+<div id="notification" class="w-full max-w-2xl opacity-0 hidden" role="alert"></div>
 
-    <!-- TAB NAVIGATION -->
-    <div class="w-full max-w-2xl mb-6">
-        <div class="flex bg-gray-100 rounded-xl p-1 card-shadow">
-            <button id="advisor-tab-btn" onclick="switchTab('advisor')" class="flex-1 py-3 px-4 rounded-lg font-semibold transition duration-200 bg-white text-indigo-600 shadow-sm">
-                <span class="flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                    Advisor
-                </span>
-            </button>
-            <button id="cards-tab-btn" onclick="switchTab('cards')" class="flex-1 py-3 px-4 rounded-lg font-semibold transition duration-200 text-gray-600 hover:text-gray-800">
-                <span class="flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
-                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
-                    </svg>
-                    My Cards (<span id="card-count">0</span>)
-                </span>
-        </button>
-    </div>
-    </div>
-
-    <!-- ADVISOR TAB CONTENT -->
-    <div id="advisor-tab-content" class="w-full max-w-2xl">
+<!-- ADVISOR TAB CONTENT -->
+<div id="advisor-tab-content" class="w-full max-w-2xl">
 <!-- AI ADVISOR QUERY SECTION -->
         <section class="mb-8">
     <div class="bg-white p-6 rounded-xl card-shadow border border-gray-200">
@@ -1102,11 +1582,11 @@
                 </h2>
                 <textarea id="purchase-query" rows="3" placeholder="Describe your purchase... (e.g., 'Buying groceries at BigBasket for Rs 5,000' or 'Paying LIC premium Rs 20,000 online')" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"></textarea>
                 
-                <button id="submit-query" onclick="generateSuggestion()" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-lg hover:from-green-700 hover:to-emerald-700 transition duration-150 font-semibold flex items-center justify-center shadow-md">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                <button id="submit-query" onclick="generateSuggestion()" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-4 px-6 rounded-xl hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 font-bold flex items-center justify-center shadow-2xl hover:shadow-indigo-500/50 transform hover:scale-105 hover:-translate-y-1">
+                    <svg class="w-6 h-6 mr-2 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                     </svg>
-            Get Best Card Suggestion
+            🎯 Get Best Card Suggestion
         </button>
     </div>
 </section>
@@ -1125,15 +1605,15 @@
                     <p class="text-gray-500 text-lg">Your AI recommendation will appear here</p>
                     <p class="text-gray-400 text-sm mt-2">Enter your purchase details above to get started</p>
                 </div>
-            </div>
-        </section>
+    </div>
+</section>
     </div>
 
     <!-- MY CARDS TAB CONTENT -->
     <div id="cards-tab-content" class="w-full max-w-2xl hidden">
         <!-- ADD CARD SECTION -->
         <section class="mb-6">
-            <div class="bg-white p-6 rounded-xl card-shadow border border-gray-200">
+    <div class="bg-white p-6 rounded-xl card-shadow border border-gray-200">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                     <svg class="w-6 h-6 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"/>
@@ -1141,14 +1621,14 @@
                     Add New Card
                 </h2>
                 <input type="text" id="card-name" placeholder="Enter Card Name (e.g., HDFC Millennia, SBI Pulse)" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                <button id="save-card-button" onclick="fetchAndSaveCardRules()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition duration-150 font-semibold shadow-md">
+                <button id="save-card-button" onclick="fetchAndSaveCardRules()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-4 px-6 rounded-xl hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all duration-300 font-bold shadow-2xl hover:shadow-blue-500/50 transform hover:scale-105 hover:-translate-y-1">
                     <span class="flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
                         </svg>
-                        Fetch & Save Card Rules
+                        ✨ Fetch & Save Card Rules
                     </span>
-                </button>
+        </button>
     </div>
 </section>
 
@@ -1157,8 +1637,8 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Your Card Portfolio</h2>
             <div id="card-list" class="scrollable-cards max-h-96 overflow-y-auto space-y-3">
                 <p class="text-gray-500 text-center p-8 bg-gray-50 rounded-xl">Loading card list...</p>
-            </div>
-        </section>
+    </div>
+</section>
     </div>
 
 <!-- Bottom Toast for API Usage Stats -->
