@@ -1,666 +1,1335 @@
-# 🏗️ Technical Architecture - Card Advisor AI
+# 🏗️ Architecture Documentation - Card Advisor AI
 
-## System Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Card Advisor AI (Android)                 │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │              Capacitor WebView                      │    │
-│  │  ┌─────────────────────────────────────────────┐   │    │
-│  │  │          Web Application Layer              │   │    │
-│  │  │  - index.html (1169 lines)                  │   │    │
-│  │  │  - JavaScript (ES6+)                        │   │    │
-│  │  │  - Tailwind CSS                             │   │    │
-│  │  └─────────────────────────────────────────────┘   │    │
-│  │                      ↕                               │    │
-│  │  ┌─────────────────────────────────────────────┐   │    │
-│  │  │          Browser APIs                       │   │    │
-│  │  │  - localStorage (data persistence)          │   │    │
-│  │  │  - fetch (HTTP requests)                    │   │    │
-│  │  └─────────────────────────────────────────────┘   │    │
-│  └─────────────────────────────────────────────────────┘    │
-│                      ↕                                        │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │          Native Android Bridge                      │    │
-│  │  - MainActivity.java (BridgeActivity)              │    │
-│  │  - WebView with JS Bridge                          │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                      ↕
-┌─────────────────────────────────────────────────────────────┐
-│              External Services (Cloud)                       │
-├─────────────────────────────────────────────────────────────┤
-│  - Google Gemini 2.5 Flash API (AI Engine)                 │
-│  - Google Search Tool (Bank website data)                   │
-└─────────────────────────────────────────────────────────────┘
-```
+This document provides a comprehensive technical overview of Card Advisor AI's architecture, design decisions, and implementation details.
 
 ---
 
-## Core Components
+## 📑 Table of Contents
 
-### 1. Web Application (`www/index.html`)
+1. [High-Level Architecture](#high-level-architecture)
+2. [Technology Stack](#technology-stack)
+3. [Project Structure](#project-structure)
+4. [Core Components](#core-components)
+5. [Data Flow](#data-flow)
+6. [AI Integration](#ai-integration)
+7. [Storage Architecture](#storage-architecture)
+8. [UI/UX Architecture](#uiux-architecture)
+9. [Security Model](#security-model)
+10. [Performance Optimizations](#performance-optimizations)
+11. [Design Decisions](#design-decisions)
+12. [API Reference](#api-reference)
 
-**Single-file architecture** with three main sections:
+---
 
-#### A. UI Layer (HTML)
+## 🎯 High-Level Architecture
+
+### System Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Mobile Device (Android)                  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │               Capacitor WebView Container              │ │
+│  │  ┌──────────────────────────────────────────────────┐  │ │
+│  │  │         Web Application (HTML/JS/CSS)            │  │ │
+│  │  │                                                   │  │ │
+│  │  │  ┌────────────┐  ┌─────────────┐  ┌───────────┐ │  │ │
+│  │  │  │ UI Layer   │  │ Logic Layer │  │  Storage  │ │  │ │
+│  │  │  │            │  │             │  │   Layer   │ │  │ │
+│  │  │  │ - Tailwind │  │ - Card Mgmt │  │           │ │  │ │
+│  │  │  │ - HTML5    │  │ - AI Client │  │ localStorage│ │  │ │
+│  │  │  │ - Markdown │  │ - Utils     │  │           │ │  │ │
+│  │  │  └────────────┘  └─────────────┘  └───────────┘ │  │ │
+│  │  └──────────────────────────────────────────────────┘  │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                            ↕                                 │
+│            ┌───────────────────────────────┐                │
+│            │   Capacitor Bridge (Native)   │                │
+│            │   - WebView APIs              │                │
+│            │   - Platform Integration      │                │
+│            └───────────────────────────────┘                │
+└─────────────────────────────────────────────────────────────┘
+                            ↕ HTTPS
+┌─────────────────────────────────────────────────────────────┐
+│              Google Gemini API (Cloud)                       │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  Gemini 2.5 Flash Model + Google Search Tool          │ │
+│  │  - Natural Language Processing                        │ │
+│  │  - Real-Time Web Search                               │ │
+│  │  - Structured Response Generation                     │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│           Official Bank Websites (Searched by AI)           │
+│  - HDFC Bank    - SBI Card    - ICICI Bank                  │
+│  - Axis Bank    - AMEX        - Standard Chartered          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Architecture Type
+
+**Hybrid Mobile Application**:
+- **Frontend**: Web technologies (HTML5, JavaScript, CSS)
+- **Runtime**: Native Android WebView via Capacitor
+- **Backend**: Serverless (Gemini API as backend)
+- **Storage**: Client-side only (localStorage)
+
+**Key Characteristics**:
+- **Single-page application** (SPA) pattern
+- **Client-side rendering** (CSR)
+- **Zero backend infrastructure**
+- **API-first architecture**
+
+---
+
+## 🛠️ Technology Stack
+
+### Frontend Layer
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **HTML5** | Latest | Structure & semantics |
+| **JavaScript** | ES6+ | Application logic |
+| **Tailwind CSS** | 3.x (CDN) | Styling & responsive design |
+| **Markdown** | Custom parser | Content formatting |
+
+### Mobile Runtime
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Capacitor** | 6.x | Web-to-native bridge |
+| **Android WebView** | System | JavaScript runtime |
+| **Gradle** | 8.x | Build automation |
+
+### AI & APIs
+
+| Service | Model/Version | Purpose |
+|---------|---------------|---------|
+| **Google Gemini** | 2.5 Flash Preview | AI inference |
+| **Google Search** | Integrated tool | Real-time web data |
+| **REST API** | HTTPS | Communication protocol |
+
+### Development Tools
+
+| Tool | Purpose |
+|------|---------|
+| **Android Studio** | IDE, building, debugging |
+| **Chrome DevTools** | WebView debugging |
+| **Git** | Version control |
+| **Node.js** | Capacitor CLI |
+
+---
+
+## 📂 Project Structure
+
+### Directory Layout
+
+```
+cardadvisorapp/
+│
+├── android/                          # Native Android project (auto-generated)
+│   ├── app/
+│   │   ├── src/main/
+│   │   │   ├── assets/
+│   │   │   │   └── public/           # Web assets (copied from www/)
+│   │   │   │       ├── index.html    # Main app file
+│   │   │   │       └── capacitor.config.json
+│   │   │   ├── java/com/mycompany/cardadvisor/
+│   │   │   │   └── MainActivity.java # Capacitor bridge activity
+│   │   │   └── res/                  # Android resources
+│   │   │       ├── drawable/         # Icons
+│   │   │       ├── mipmap-*/         # Launcher icons
+│   │   │       ├── values/           # Strings, colors, styles
+│   │   │       └── xml/              # Android configs
+│   │   ├── build.gradle              # App-level Gradle config
+│   │   └── proguard-rules.pro        # Code obfuscation rules
+│   ├── gradle/                       # Gradle wrapper
+│   ├── build.gradle                  # Project-level Gradle config
+│   ├── settings.gradle               # Gradle settings
+│   └── local.properties              # Local SDK path
+│
+├── www/                              # Web application source
+│   ├── index.html                    # Complete app (~1650 lines)
+│   │                                 # Contains:
+│   │                                 # - HTML structure
+│   │                                 # - Inline CSS styles
+│   │                                 # - Inline JavaScript logic
+│   │                                 # - All components & functions
+│   └── (no other files)              # Single-file architecture
+│
+├── node_modules/                     # Node dependencies (if any)
+│
+├── capacitor.config.json             # Capacitor configuration
+├── package.json                      # Node package manifest
+├── package-lock.json                 # Locked dependencies
+│
+├── README.md                         # Main documentation
+├── QUICKSTART.md                     # Setup guide
+├── ARCHITECTURE.md                   # This file
+│
+├── icon-design.svg                   # App icon source
+├── .gitignore                        # Git ignore rules
+└── local.properties                  # Android SDK path
+```
+
+### Single-File Architecture
+
+**Why one HTML file?**
+
+1. **Simplicity**: No module bundler needed
+2. **WebView Compatibility**: Avoids ES6 module issues
+3. **Inline Everything**: CSS and JS embedded
+4. **Zero Build Step**: Edit and copy - that's it
+5. **Easy Debugging**: All code in one place
+
+**www/index.html Structure** (~1650 lines):
+
 ```html
-<!-- Header with App Icon -->
-<header> ... </header>
-
-<!-- Tab Navigation -->
-<div id="tabs">
-  - Advisor Tab (default)
-  - My Cards Tab (with badge)
-</div>
-
-<!-- Advisor Tab Content -->
-<section id="advisor-tab-content">
-  - Purchase query input
-  - Get recommendation button
-  - Results display
-  - Loading indicator
-</section>
-
-<!-- My Cards Tab Content -->
-<section id="cards-tab-content">
-  - Add card form
-  - Card portfolio list
-  - Card management (edit, refresh, delete)
-</section>
-
-<!-- Modals -->
-- Settings modal (API key)
-- Rename card modal
-
-<!-- Toast Notification -->
-<div id="usage-toast"> ... </div>
-```
-
-#### B. Business Logic (JavaScript)
-
-**Data Management:**
-```javascript
-// Card storage
-let cardList = [];
-let userId = 'local-user';
-
-// Load from localStorage
-function loadCardsFromStorage() { ... }
-
-// Save to localStorage
-function saveCardsToStorage() { ... }
-```
-
-**API Communication:**
-```javascript
-// Main API function
-async function fetchGeminiResponse(systemPrompt, userQuery) {
-  - Retry logic (max 4 attempts)
-  - Rate limit handling (exponential backoff)
-  - Token usage tracking
-  - Request count tracking
-  return { text, usage }
-}
-```
-
-**Key Functions:**
-
-| Function | Purpose | API Calls |
-|----------|---------|-----------|
-| `fetchAndSaveCardRules()` | Add new card | 1 |
-| `refreshCardRules()` | Update card rules | 1 |
-| `generateSuggestion()` | Get recommendation | 1 |
-| `markdownToHtml()` | Format AI response | 0 |
-| `displayUsageStats()` | Show usage toast | 0 |
-
-#### C. Styling (Tailwind + Custom CSS)
-
-**Tailwind Utilities:**
-- Responsive grid system
-- Color scheme (indigo primary, gray base)
-- Shadow effects (`shadow-md`, `shadow-lg`)
-- Animations (`animate-spin`, `transition`)
-
-**Custom CSS:**
-```css
-/* LaTeX cleanup handled via JavaScript */
-/* Markdown rendering with styled lists/tables */
-/* Blink animation for delete confirmation */
-@keyframes blink-red { ... }
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Meta tags, Tailwind CDN -->
+    <style>
+      /* Inline CSS (~100 lines) */
+      /* - Custom animations */
+      /* - Safe area handling */
+      /* - Markdown styling */
+    </style>
+  </head>
+  <body>
+    <!-- Modals (~300 lines) -->
+    <!-- - View Rules Modal -->
+    <!-- - Rename Card Modal -->
+    <!-- - Settings Modal -->
+    
+    <!-- Side Menu (~80 lines) -->
+    <!-- Navigation drawer -->
+    
+    <!-- Header (~50 lines) -->
+    <!-- App branding, menu button -->
+    
+    <!-- Main Content (~200 lines) -->
+    <!-- - AI Advisor View -->
+    <!-- - My Cards View -->
+    
+    <!-- Notification Toast (~20 lines) -->
+    
+    <script>
+      /* Application Logic (~900 lines) */
+      
+      /* === Storage Layer === */
+      /* - getApiKey() */
+      /* - saveApiKey() */
+      /* - loadCardsFromStorage() */
+      /* - saveCardsToStorage() */
+      
+      /* === UI Functions === */
+      /* - openMenu(), closeMenu() */
+      /* - navigateTo(view) */
+      /* - openModal(), closeModal() */
+      /* - showNotification() */
+      /* - displayUsageStats() */
+      
+      /* === Card Management === */
+      /* - renderCards() */
+      /* - addNewCard() */
+      /* - deleteCard() */
+      /* - updateCardName() */
+      /* - openViewRulesModal() */
+      /* - reloadRulesInModal() */
+      
+      /* === AI Integration === */
+      /* - fetchGeminiResponse() */
+      /* - fetchAndSaveCardRules() */
+      /* - refreshCardRules() */
+      /* - generateSuggestion() */
+      
+      /* === Utilities === */
+      /* - markdownToHtml() */
+      /* - updateCardCount() */
+      /* - isApiKeyConfigured() */
+      
+      /* === Event Listeners === */
+      /* - DOMContentLoaded */
+    </script>
+  </body>
+</html>
 ```
 
 ---
 
-## Data Flow
+## 🔧 Core Components
 
-### Flow 1: Adding a Card
+### 1. Storage Layer
 
-```
-User Input (Card Name)
-    ↓
-fetchAndSaveCardRules()
-    ↓
-Construct AI Prompt:
-  - System: "Search official bank website..."
-  - User: "Find rules for [Card Name]"
-    ↓
-fetchGeminiResponse()
-    ↓
-API Request to Gemini
-    ↓
-[Gemini uses Google Search Tool]
-    ↓
-Search bank websites (HDFC, SBI, etc.)
-    ↓
-Extract reward rules, exclusions
-    ↓
-Return structured markdown
-    ↓
-Clean LaTeX artifacts
-    ↓
-Save to cardList array
-    ↓
-saveCardsToStorage() → localStorage
-    ↓
-renderCards() → Display in UI
-    ↓
-displayUsageStats() → Show toast
-```
+**Technology**: localStorage (Browser API)
 
-### Flow 2: Getting Recommendation
-
-```
-User Input (Purchase Description)
-    ↓
-generateSuggestion()
-    ↓
-Gather all card rules from cardList
-    ↓
-Construct AI Prompt:
-  - System: "Analyze cards and recommend best..."
-  - User: "Purchase: [Description]"
-  - Context: Full card portfolio
-    ↓
-fetchGeminiResponse()
-    ↓
-AI analyzes:
-  - Purchase category
-  - MCC codes
-  - Card reward rates
-  - Exclusions
-    ↓
-Calculate effective rates
-    ↓
-Return recommendation with calculation
-    ↓
-markdownToHtml() → Format
-    ↓
-Display in results section
-    ↓
-displayUsageStats() → Show toast
-```
-
----
-
-## AI Prompt Engineering
-
-### Card Rules Extraction Prompt
-
-**System Prompt:**
-```
-You are a financial information specialist with access to real-time web search.
-
-Task:
-1. Search OFFICIAL BANK WEBSITE for "[Card Name]"
-2. Verify from bank's reward program T&C
-3. Provide MOBILE-FRIENDLY summary using BULLET POINTS
-
-Required Information:
-- Reward Point earning rate (per ₹100/₹150)
-- Accelerated/Bonus categories
-- Key Exclusions
-- Redemption value
-
-Formatting Rules:
-- Simple bullet points, NO tables
-- Use bold (**text**) for emphasis
-- Keep lines short for mobile
-- NO LaTeX formatting
-- Currency in Rupees (₹) ONLY
-```
-
-**User Prompt:**
-```
-Search the official bank website for "[Card Name]" credit card 
-(INDIAN market) and provide current reward rules in RUPEES (₹). 
-Format as simple bullet points for mobile. NO TABLES. NO LATEX.
-```
-
-### Recommendation Prompt
-
-**System Prompt:**
-```
-You are a world-class financial analyst for INDIAN market.
-
-Analyze: Provided INDIAN credit cards
-Identify: SINGLE best card for purchase
-Explain: Maximum reward/cashback value
-Compare: Second-best option if close
-
-Formatting Rules:
-- Bullet points, NO tables
-- Bold card names, amounts
-- Short, scannable lines
-- Section headings (### Best Card)
-- Show calculations: "5% of ₹1000 = ₹50"
-- Use emojis sparingly (✅, 💰, 🎯)
-
-Currency Rules:
-- ALL amounts in Rupees (₹) ONLY
-- NEVER use $ or dollars
-
-Card Portfolio:
-[Full card data here]
-```
-
-**User Prompt:**
-```
-I am planning to make the following purchase in INDIA: "[Purchase]"
-Which card should I use to maximize rewards? 
-State calculation clearly in RUPEES (₹). 
-FORMAT FOR MOBILE - NO TABLES. NO LATEX.
-```
-
----
-
-## Storage Schema
-
-### localStorage Key: `cardAdvisorCards`
-
-**Value:** JSON array of card objects
-
-**Card Object Structure:**
+**Key-Value Store**:
 ```javascript
+// API Key Storage
+localStorage.setItem('geminiApiKey', 'AIza...');
+let apiKey = localStorage.getItem('geminiApiKey');
+
+// Cards Storage
+localStorage.setItem('cardAdvisorCards', JSON.stringify(cards));
+let cards = JSON.parse(localStorage.getItem('cardAdvisorCards') || '[]');
+```
+
+**Data Structure**:
+```javascript
+// Card Object
 {
-  id: string,          // e.g., "hdfc_millennia" (generated)
-  name: string,        // e.g., "HDFC Millennia"
-  rules: string        // Markdown-formatted rules from AI
+  id: "hdfc_millennia_credit_card",    // Unique identifier
+  name: "HDFC Millennia Credit Card",  // Display name
+  rules: "### Base Rewards\n- 1%..."   // Markdown formatted rules
 }
-```
 
-**Example:**
-```json
+// Cards Array
 [
-  {
-    "id": "hdfc_millennia",
-    "name": "HDFC Millennia",
-    "rules": "### Reward Structure\n- Base: 1% cashback\n- Amazon: 5% cashback..."
-  },
-  {
-    "id": "sbi_pulse",
-    "name": "SBI Pulse",
-    "rules": "### Earning Rate\n- 10 RP per ₹100..."
-  }
+  { id: "card1", name: "...", rules: "..." },
+  { id: "card2", name: "...", rules: "..." },
+  ...
 ]
 ```
 
-### localStorage Key: `gemini_api_key`
+**Storage Functions**:
+```javascript
+function loadCardsFromStorage() {
+  const stored = localStorage.getItem('cardAdvisorCards');
+  return stored ? JSON.parse(stored) : [];
+}
 
-**Value:** String (encrypted by WebView)
+function saveCardsToStorage(cards) {
+  localStorage.setItem('cardAdvisorCards', JSON.stringify(cards));
+}
+```
 
 ---
 
-## Error Handling Strategy
+### 2. AI Integration Layer
 
-### 1. Network Errors
+**Provider**: Google Gemini API
 
+**Endpoint**:
+```
+https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent
+```
+
+**Request Structure**:
 ```javascript
-try {
-  const response = await fetch(apiUrl, { ... });
-} catch (error) {
-  console.error("Network error:", error);
-  showNotification("Connection failed. Retrying...", true);
-  // Retry with exponential backoff
+{
+  "contents": [
+    {
+      "parts": [
+        { "text": "User query here" }
+      ]
+    }
+  ],
+  "tools": [
+    { "google_search": {} }  // Enable web search
+  ],
+  "systemInstruction": {
+    "parts": [
+      { "text": "System prompt with instructions" }
+    ]
+  }
 }
 ```
 
-### 2. API Rate Limiting
-
+**Response Structure**:
 ```javascript
-if (response.status === 429) {
-  const delay = Math.pow(2, attempt) * 1000;
-  showNotification(`Rate limited. Retrying in ${delay/1000}s...`, true);
-  await new Promise(resolve => setTimeout(resolve, delay));
-  attempt++;
-  continue; // Retry
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          { "text": "AI response here" }
+        ]
+      }
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 1200,
+    "candidatesTokenCount": 1250,
+    "totalTokenCount": 2450
+  }
 }
 ```
 
-### 3. Invalid Responses
-
+**Core AI Function**:
 ```javascript
-if (!text || text.length < 50) {
-  console.warn('Response too short:', text);
-  lastError = 'Response too short or invalid';
-  // Try again up to maxRetries
+async function fetchGeminiResponse(systemPrompt, userQuery) {
+  const apiKey = getApiKey();
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+  
+  const payload = {
+    contents: [{ parts: [{ text: userQuery }] }],
+    tools: [{ "google_search": {} }],
+    systemInstruction: { parts: [{ text: systemPrompt }] }
+  };
+  
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  
+  const result = await response.json();
+  return {
+    text: result.candidates[0].content.parts[0].text,
+    usage: result.usageMetadata
+  };
 }
 ```
 
-### 4. User Errors
+---
 
+### 3. UI Component Layer
+
+**Framework**: Vanilla JavaScript + Tailwind CSS
+
+**View Management**:
 ```javascript
-if (!cardName.trim()) {
-  showNotification("Please enter card name", true);
-  return; // Early exit
+const views = {
+  advisor: document.getElementById('advisor-tab-content'),
+  cards: document.getElementById('cards-tab-content')
+};
+
+function navigateTo(view) {
+  // Hide all views
+  Object.values(views).forEach(v => v.classList.add('hidden'));
+  
+  // Show selected view
+  views[view].classList.remove('hidden');
+  
+  // Close menu
+  closeMenu();
+}
+```
+
+**Modal System**:
+```javascript
+// View Rules Modal
+function openViewRulesModal(cardId, cardName) {
+  // Find card
+  const card = cardList.find(c => c.id === cardId);
+  
+  // Populate modal
+  document.getElementById('view-rules-card-name').textContent = cardName;
+  document.getElementById('view-rules-content').innerHTML = markdownToHtml(card.rules);
+  
+  // Show modal
+  document.getElementById('view-rules-modal').classList.remove('hidden');
+  
+  // Store for reload
+  currentViewingCardId = cardId;
 }
 
-if (!isApiKeyConfigured()) {
-  showNotification("⚙️ Please configure API key first", true);
-  setTimeout(() => openSettingsModal(), 500);
+function closeViewRulesModal() {
+  document.getElementById('view-rules-modal').classList.add('hidden');
+  currentViewingCardId = null;
+}
+```
+
+**Notification System**:
+```javascript
+function showNotification(message, isError) {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.className = isError ? 'error-class' : 'success-class';
+  notification.classList.remove('hidden');
+  
+  setTimeout(() => {
+    notification.classList.add('hidden');
+  }, 3000);
+}
+```
+
+---
+
+### 4. Markdown Rendering Engine
+
+**Purpose**: Convert AI's markdown responses to styled HTML
+
+**Supported Features**:
+- Headings (`#`, `##`, `###`)
+- Bold (`**text**`, `__text__`)
+- Italic (`*text*`, `_text_`)
+- Inline code (`` `code` ``)
+- Code blocks (``` ``` ```)
+- Lists (ordered and unordered)
+- Paragraphs
+- Line breaks
+
+**Implementation**:
+```javascript
+function markdownToHtml(markdown) {
+  let html = markdown;
+  
+  // LaTeX cleanup
+  html = html.replace(/\$\\times\$/g, '×');
+  html = html.replace(/\\text\{([^}]+)\}/g, '$1');
+  html = html.replace(/\$([0-9,]+)/g, '₹$1');
+  
+  // Headings
+  html = html.replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold text-indigo-800 mt-4 mb-2">$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-indigo-900 mt-5 mb-3">$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-gray-900 mt-6 mb-4">$1</h1>');
+  
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="text-indigo-700">$1</strong>');
+  html = html.replace(/__(.+?)__/g, '<strong class="text-indigo-700">$1</strong>');
+  
+  // Italic
+  html = html.replace(/\*(.+?)\*/g, '<em class="italic text-gray-700">$1</em>');
+  html = html.replace(/_(.+?)_/g, '<em class="italic text-gray-700">$1</em>');
+  
+  // Lists
+  html = html.replace(/^- (.+)$/gm, '<li class="ml-4 text-gray-700">• $1</li>');
+  html = html.replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 text-gray-700"><span class="text-indigo-600 font-semibold">$1.</span> $2</li>');
+  
+  // Wrap lists
+  html = html.replace(/(<li class="ml-4[^>]*>.*<\/li>)+/gs, '<ul class="space-y-1 my-3">$&</ul>');
+  
+  // Highlight currency
+  html = html.replace(/₹([0-9,]+)/g, '<span class="text-green-600 font-semibold">₹$1</span>');
+  
+  // Highlight percentages
+  html = html.replace(/(\d+(?:\.\d+)?%)/g, '<span class="text-blue-600 font-semibold">$1</span>');
+  
+  return html;
+}
+```
+
+---
+
+## 🔄 Data Flow
+
+### Card Addition Flow
+
+```
+User Input
+    ↓
+[Enter Card Name] → "HDFC Millennia Credit Card"
+    ↓
+[Click "Fetch & Save"]
+    ↓
+fetchAndSaveCardRules()
+    ↓
+Build AI Prompt
+    ↓
+    ├─ System Prompt (70+ categories template)
+    └─ User Query ("Fetch complete rules for HDFC Millennia...")
+    ↓
+fetchGeminiResponse()
+    ↓
+HTTP POST → Google Gemini API
+    ↓
+Gemini searches official bank website
+    ↓
+Gemini extracts comprehensive rules
+    ↓
+Response received
+    ↓
+    ├─ text: Markdown formatted rules
+    └─ usage: { promptTokens, responseTokens, totalTokens }
+    ↓
+Create Card Object
+    ↓
+    {
+      id: "hdfc_millennia_credit_card",
+      name: "HDFC Millennia Credit Card",
+      rules: "### Base Rewards\n- 1%..."
+    }
+    ↓
+Add to cardList array
+    ↓
+saveCardsToStorage() → localStorage.setItem()
+    ↓
+renderCards() → Update UI
+    ↓
+displayUsageStats() → Show toast
+    ↓
+Done ✓
+```
+
+---
+
+### Recommendation Flow
+
+```
+User Input
+    ↓
+[Enter Query] → "Buying ₹5,000 groceries at BigBasket"
+    ↓
+[Click "Get Best Card Suggestion"]
+    ↓
+generateSuggestion()
+    ↓
+Load all cards from cardList
+    ↓
+Build AI Prompt
+    ↓
+    ├─ System Prompt (recommendation instructions)
+    └─ User Query + All Card Rules
+    ↓
+fetchGeminiResponse()
+    ↓
+HTTP POST → Google Gemini API
+    ↓
+Gemini analyzes:
+    ├─ Purchase category
+    ├─ Amount (₹5,000)
+    ├─ Merchant (BigBasket)
+    └─ All card reward rates
+    ↓
+Gemini calculates:
+    ├─ Card A: 5% = ₹250
+    ├─ Card B: 2% = ₹100
+    └─ Card C: 1% = ₹50
+    ↓
+Response received
+    ↓
+    {
+      text: "✅ Use HDFC Millennia\n💰 Earn ₹250...",
+      usage: { ... }
+    }
+    ↓
+markdownToHtml() → Convert to styled HTML
+    ↓
+Display in suggestion-result div
+    ↓
+displayUsageStats() → Show toast
+    ↓
+Done ✓
+```
+
+---
+
+### Modal View & Reload Flow
+
+```
+User Action
+    ↓
+[Click 👁️ Eye Icon] on card
+    ↓
+openViewRulesModal(cardId, cardName)
+    ↓
+Find card in cardList
+    ↓
+Render rules: markdownToHtml(card.rules)
+    ↓
+Show modal (classList.remove('hidden'))
+    ↓
+Store currentViewingCardId (for reload)
+    ↓
+Modal Displayed ✓
+    ↓
+    ↓ [User clicks "Reload Rules"]
+    ↓
+reloadRulesInModal()
+    ↓
+Show loading animation
+    ↓
+Call refreshCardRules(currentViewingCardId, cardName)
+    ↓
+Fetch fresh rules from bank website
+    ↓
+Update cardList[cardId].rules
+    ↓
+Save to localStorage
+    ↓
+Update card list view (renderCards)
+    ↓
+Update modal content (markdownToHtml)
+    ↓
+Hide loading, restore button
+    ↓
+Done ✓
+```
+
+---
+
+## 🧠 AI Integration
+
+### Prompt Engineering
+
+**System Prompt Structure** (~600 lines):
+
+```javascript
+const systemPrompt = `You are a financial information specialist with access to real-time web search via Google Search. Your task is to:
+
+1. Search the OFFICIAL BANK WEBSITE for the "${cardName}" credit card (e.g., HDFC Bank, SBI Card, ICICI, Axis Bank official sites).
+
+2. Verify information from the bank's official reward program terms and conditions.
+
+3. Provide a COMPREHENSIVE, COMPLETE, MOBILE-FRIENDLY summary using BULLET POINTS (no tables!) of ALL verified benefits:
+
+**MUST INCLUDE ALL OF THE FOLLOWING CATEGORIES (if available):**
+
+**BASE REWARDS:**
+- Base Reward Point (RP) earning rate per ₹100 or ₹150 spent (or Cashback %)
+- Milestone benefits and annual spend bonuses
+
+**HEALTHCARE & MEDICAL:**
+- Pharmacy purchases (MedPlus, Apollo Pharmacy, Netmeds, 1mg)
+- Hospital and clinic payments
+- Health insurance premium payments
+- Medical equipment and supplies
+- Diagnostic tests and health checkups
+
+[... 13 more major categories with 70+ subcategories ...]
+
+4. COMPLETENESS RULES (CRITICAL):
+- DO NOT TRUNCATE or summarize - include ALL offers found on the official website
+- Check EVERY category listed above - don't skip categories
+- If there are 20 benefits, list all 20 - don't leave anything out
+- Be especially thorough with:
+  * Movie ticket offers (BookMyShow 1+1) - present in most premium cards
+  * Grocery rewards - often have special accelerated rates
+  * Fuel surcharge waivers - common benefit
+  * Healthcare/Pharmacy - increasingly popular benefit
+- Include monthly/quarterly/annual caps for each category
+- Mention if a category is EXCLUDED (0 rewards) - this is important info too
+
+5. FORMATTING RULES:
+- Use simple bullet points (- or *), NOT tables or complex formatting
+- Use bold (**text**) for emphasis on offer names
+- Keep lines short for mobile readability
+- Use clear section headings (### Heading)
+- ABSOLUTELY NO LaTeX: no $...$ math mode, no \\text{}, no \\times, no \\$
+- For multiplication use "×" or "x", NOT \\times or $\\times$
+- Write as plain text/Markdown only
+
+6. CURRENCY RULES (CRITICAL):
+- ALL amounts must be in Indian Rupees (₹) ONLY
+- Never use $ or dollars - this is for INDIAN credit cards
+- Example: ₹100, ₹1,000, ₹50 cashback
+
+7. SOURCE VERIFICATION:
+- Use ONLY official bank sources as the source of truth
+- If specific benefit not found on official site, don't make it up
+- But be thorough - check rewards page, terms & conditions, feature highlights`;
+```
+
+**User Query Structure**:
+
+```javascript
+const userQuery = `Search the official "${cardName}" bank website and fetch COMPLETE, COMPREHENSIVE reward rules for ALL spending categories:
+
+MUST COVER (if available):
+- Healthcare/Medical/Pharmacy
+- Groceries/Supermarkets
+- Fuel/Petrol stations
+- Dining/Restaurants/Food delivery
+- Entertainment (Movie tickets - BookMyShow 1+1 offers, OTT subscriptions)
+- Travel (Flights, Hotels, Lounge access, Cabs)
+- Online Shopping (Amazon, Flipkart, etc.)
+- Offline Shopping (Malls, Electronics, Fashion)
+- Utilities (Bills, Recharge)
+- Insurance premiums
+- Education fees
+- Lifestyle/Wellness
+
+DO NOT TRUNCATE or skip any category - list ALL offers, cashback rates, and reward points for EVERY category found on official website. Use bullet points, NO TABLES. Format in RUPEES (₹) for INDIAN market.`;
+```
+
+### API Configuration
+
+**Model Selection**:
+- **Model**: `gemini-2.5-flash-preview-09-2025`
+- **Why Flash**: Fast response, good quality, cost-effective
+- **Why 2.5**: Latest model with improved reasoning
+
+**Tools Integration**:
+```javascript
+"tools": [{ "google_search": {} }]
+```
+- Enables real-time web search
+- AI searches official bank websites
+- Verifies from T&C pages
+- Always up-to-date information
+
+**Rate Limiting**:
+```javascript
+// Retry with exponential backoff
+const delays = [2000, 4000, 8000]; // 2s, 4s, 8s
+for (let attempt = 0; attempt < maxRetries; attempt++) {
+  try {
+    const response = await fetch(apiUrl, payload);
+    if (response.status === 429) {
+      await sleep(delays[attempt]);
+      continue;
+    }
+    return response;
+  } catch (error) {
+    if (attempt === maxRetries - 1) throw error;
+  }
+}
+```
+
+---
+
+## 🎨 UI/UX Architecture
+
+### Responsive Design
+
+**Viewport Configuration**:
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+```
+
+**Safe Area Handling**:
+```css
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+header {
+  padding-top: calc(env(safe-area-inset-top) + 1rem);
+  margin-top: 0.5rem;
+}
+
+#side-menu .header {
+  padding-top: calc(env(safe-area-inset-top) + 1.5rem);
+}
+```
+
+**Benefits**:
+- Content never hidden behind notch/camera
+- Proper spacing on all devices
+- Works with different screen shapes
+
+### Component Hierarchy
+
+```
+App Root
+│
+├── Modals (z-index: 50+)
+│   ├── View Rules Modal
+│   │   ├── Gradient Header
+│   │   ├── Scrollable Content
+│   │   └── Action Footer
+│   ├── Rename Card Modal
+│   └── Settings Modal
+│
+├── Side Menu (z-index: 50)
+│   ├── Branded Header
+│   └── Navigation Links
+│
+├── Header (sticky top)
+│   ├── Menu Button
+│   ├── App Icon
+│   ├── App Name
+│   └── Card Count Badge
+│
+├── Main Content
+│   ├── AI Advisor View
+│   │   ├── Query Input
+│   │   ├── Submit Button
+│   │   └── Results Display
+│   │
+│   └── My Cards View
+│       ├── Add Card Form
+│       └── Card List
+│           └── Card Item
+│               ├── Card Icon
+│               ├── Card Name
+│               ├── Edit Button
+│               └── Actions (View, Reload, Delete)
+│
+└── Toast Notification (z-index: 50)
+    └── Usage Stats
+```
+
+### Animation System
+
+**CSS Animations**:
+```css
+@keyframes gradientShift {
+  0% { background-position: 0% 50%, 0% 0%; }
+  50% { background-position: 100% 50%, 0% 0%; }
+  100% { background-position: 0% 50%, 0% 0%; }
+}
+
+@keyframes blink-red {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(239, 68, 68, 0.2); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+```
+
+**JavaScript Animations**:
+```javascript
+// Smooth transitions
+element.classList.add('transition-all', 'duration-200');
+
+// Toast auto-dismiss
+setTimeout(() => {
+  toast.classList.add('opacity-0');
+  setTimeout(() => toast.classList.add('hidden'), 300);
+}, 3000);
+
+// Delete blink
+deleteBtn.classList.add('blink-delete');
+setTimeout(() => deleteBtn.classList.remove('blink-delete'), 500);
+```
+
+---
+
+## 🔒 Security Model
+
+### Threat Model
+
+**Assets to Protect**:
+- User's Gemini API key
+- Credit card portfolio data
+- API usage information
+
+**Threat Actors**:
+- Malicious apps on device
+- Man-in-the-middle attacks
+- Unauthorized API usage
+
+**Mitigations**:
+- ✅ localStorage (sandboxed per-app)
+- ✅ HTTPS-only API calls
+- ✅ No backend to compromise
+- ✅ No user accounts to hack
+
+### Data Security
+
+**localStorage Security**:
+```javascript
+// Sandboxed per WebView
+// Other apps cannot access
+// Survives app restarts
+// Cleared on app uninstall
+localStorage.setItem('geminiApiKey', apiKey);
+```
+
+**API Key Handling**:
+```html
+<!-- Always masked -->
+<input type="password" id="api-key-input" />
+
+<!-- Never logged -->
+console.log(apiKey); // ❌ Never do this
+
+<!-- Only sent to Gemini API -->
+fetch(geminiUrl, { headers: { 'Authorization': `Bearer ${apiKey}` } });
+```
+
+**Network Security**:
+- ✅ HTTPS enforced for all API calls
+- ✅ Certificate pinning (Android WebView)
+- ✅ No plaintext transmission
+- ✅ TLS 1.2+ required
+
+### Privacy
+
+**Data Collection**:
+- ❌ No analytics
+- ❌ No crash reporting
+- ❌ No user tracking
+- ❌ No telemetry
+
+**Data Sharing**:
+- ❌ No cloud sync
+- ❌ No third-party services (except Gemini API)
+- ❌ No social integrations
+- ❌ No advertising networks
+
+**Permissions**:
+```xml
+<!-- AndroidManifest.xml -->
+<uses-permission android:name="android.permission.INTERNET"/>
+<!-- That's it! No other permissions -->
+```
+
+---
+
+## ⚡ Performance Optimizations
+
+### Frontend Optimizations
+
+**1. Lazy Loading**:
+```javascript
+// Cards rendered on-demand
+function renderCards() {
+  container.innerHTML = ''; // Clear first
+  cardList.forEach(card => {
+    const cardEl = document.createElement('div');
+    cardEl.innerHTML = cardHTML;
+    container.appendChild(cardEl);
+  });
+}
+```
+
+**2. Debouncing**:
+```javascript
+// Prevent rapid API calls
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL = 2000;
+
+if (Date.now() - lastRequestTime < MIN_REQUEST_INTERVAL) {
+  showNotification('Please wait before making another request', true);
   return;
 }
 ```
 
----
-
-## Performance Optimizations
-
-### 1. Lazy Loading
-
-- Cards rendered only when "My Cards" tab is active
-- AI results rendered only after API response
-
-### 2. Caching
-
-- Card rules cached in localStorage
-- No API calls on app restart (data persists)
-
-### 3. Efficient Rendering
-
+**3. Efficient DOM Updates**:
 ```javascript
-// Single innerHTML update vs multiple DOM manipulations
-container.innerHTML = cardList.map(card => `...`).join('');
-```
-
-### 4. Debouncing (Future)
-
-Could add for search/filter:
-```javascript
-const debounce = (fn, delay) => {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
-};
-```
-
----
-
-## Security Measures
-
-### 1. API Key Protection
-
-- Stored in localStorage (sandboxed per-app)
-- Masked input field (`type="password"`)
-- Never logged or exposed in UI
-- User-controlled (no default key)
-
-### 2. Input Sanitization
-
-```javascript
-// Card name sanitization
-const cardId = cardName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-
-// HTML escaping in markdown
-html = html.replace(/<script>/gi, '&lt;script&gt;');
-```
-
-### 3. HTTPS Only
-
-```json
-// capacitor.config.json
-{
-  "server": {
-    "androidScheme": "https"  // Forces HTTPS for WebView
-  }
+// Update only changed elements
+function updateCardCount() {
+  const badge = document.getElementById('card-count-badge');
+  const count = cardList.length;
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
 }
 ```
 
-### 4. Minimal Permissions
+### Network Optimizations
 
-AndroidManifest.xml:
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-<!-- No other permissions requested -->
+**1. Request Caching**:
+```javascript
+// Cache card rules locally
+localStorage.setItem('cardAdvisorCards', JSON.stringify(cards));
+
+// No need to re-fetch unless user triggers refresh
+```
+
+**2. Retry Strategy**:
+```javascript
+// Exponential backoff for failed requests
+const delays = [1000, 2000, 4000, 8000];
+```
+
+**3. Minimal Payload**:
+```javascript
+// Only send necessary data
+{
+  contents: [{ parts: [{ text: query }] }],
+  tools: [{ google_search: {} }],
+  systemInstruction: { parts: [{ text: prompt }] }
+}
+```
+
+### Storage Optimizations
+
+**1. Efficient Serialization**:
+```javascript
+// Compact JSON storage
+localStorage.setItem('cards', JSON.stringify(cards));
+
+// No whitespace, minimal overhead
+```
+
+**2. Selective Updates**:
+```javascript
+// Update only changed cards
+function updateCard(cardId, newRules) {
+  const index = cardList.findIndex(c => c.id === cardId);
+  cardList[index].rules = newRules;
+  saveCardsToStorage(); // Only save changed data
+}
 ```
 
 ---
 
-## Testing Strategy
+## 🎯 Design Decisions
 
-### Manual Testing Checklist
+### Why Capacitor over Native?
 
-- [ ] Add card with valid name
-- [ ] Add card with special characters
-- [ ] Refresh card rules
-- [ ] Delete card (check blink animation)
-- [ ] Rename card
-- [ ] Get recommendation with 0 cards (should warn)
-- [ ] Get recommendation with 1 card
-- [ ] Get recommendation with multiple cards
-- [ ] Test with invalid API key
-- [ ] Test with no API key
-- [ ] Test rate limiting (make many requests)
-- [ ] Test offline mode (should fail gracefully)
-- [ ] Test localStorage persistence (restart app)
-- [ ] Test on different screen sizes
+**Pros**:
+- ✅ Write once, run on Android (and iOS if needed)
+- ✅ Web technologies (HTML/CSS/JS) - faster development
+- ✅ No native code knowledge required
+- ✅ Hot reload during development
+- ✅ Easy debugging (Chrome DevTools)
 
-### Chrome DevTools Testing
+**Cons**:
+- ❌ Slightly larger APK size
+- ❌ Dependency on WebView performance
+- ❌ Limited access to cutting-edge native APIs
 
-```bash
-# Connect device via USB
-adb devices
+**Decision**: **Pros outweigh cons** for this use case.
 
-# Open Chrome DevTools
-chrome://inspect
+---
 
-# Select "Card Advisor AI"
-# Console tab: View JavaScript logs
-# Application tab: Check localStorage
-# Network tab: Monitor API calls
+### Why Single HTML File?
+
+**Pros**:
+- ✅ No build process required
+- ✅ No module bundler (webpack, rollup)
+- ✅ Zero configuration
+- ✅ WebView compatible (no ES6 module issues)
+- ✅ Easy to debug (all code in one place)
+- ✅ Instant changes (edit, copy, rebuild)
+
+**Cons**:
+- ❌ Large file (~1650 lines)
+- ❌ No code splitting
+- ❌ No tree shaking
+- ❌ Harder to navigate
+
+**Decision**: **Simplicity wins** for solo developer project.
+
+---
+
+### Why localStorage over Firebase?
+
+**Pros**:
+- ✅ Zero backend setup
+- ✅ No authentication required
+- ✅ No network dependency (offline-first)
+- ✅ Instant reads/writes
+- ✅ Complete privacy (data never leaves device)
+- ✅ No quota limits
+- ✅ No billing surprises
+
+**Cons**:
+- ❌ No cross-device sync
+- ❌ No cloud backup
+- ❌ Lost on app uninstall
+- ❌ Limited storage (~5-10 MB)
+
+**Decision**: **Privacy and simplicity** more important than sync.
+
+---
+
+### Why Gemini over OpenAI?
+
+**Pros**:
+- ✅ Free tier (1,500 requests/day)
+- ✅ Google Search integration (built-in tool)
+- ✅ Latest 2.5 Flash model (fast + good quality)
+- ✅ No credit card required
+- ✅ Generous token limits
+- ✅ Real-time web search capability
+
+**Cons**:
+- ❌ Less ecosystem than OpenAI
+- ❌ Fewer third-party tools
+
+**Decision**: **Free tier and search integration** are key.
+
+---
+
+### Why Inline CSS/JS?
+
+**Pros**:
+- ✅ No external file loading
+- ✅ Single HTTP request (index.html only)
+- ✅ No CORS issues
+- ✅ Guaranteed to work in WebView
+- ✅ No build step
+
+**Cons**:
+- ❌ Harder to maintain
+- ❌ No syntax highlighting (IDE limitations)
+- ❌ No CSS preprocessor
+- ❌ No TypeScript
+
+**Decision**: **Reliability over developer convenience**.
+
+---
+
+## 📚 API Reference
+
+### Storage API
+
+```javascript
+// Get API key
+function getApiKey() {
+  return localStorage.getItem('geminiApiKey') || '';
+}
+
+// Save API key
+function saveApiKeyToStorage(key) {
+  localStorage.setItem('geminiApiKey', key);
+}
+
+// Load cards
+function loadCardsFromStorage() {
+  const stored = localStorage.getItem('cardAdvisorCards');
+  return stored ? JSON.parse(stored) : [];
+}
+
+// Save cards
+function saveCardsToStorage(cards) {
+  localStorage.setItem('cardAdvisorCards', JSON.stringify(cards));
+}
 ```
 
 ---
 
-## Build Process
+### UI API
 
-### 1. Web → Android Asset Copy
+```javascript
+// Navigation
+function navigateTo(view)         // 'advisor' | 'cards'
+function openMenu()
+function closeMenu()
 
-```bash
-npx cap copy android
-```
+// Modals
+function openViewRulesModal(cardId, cardName)
+function closeViewRulesModal()
+function openRenameModal(cardId, currentName)
+function closeRenameModal()
+function openSettingsModal()
+function closeSettingsModal()
 
-**What happens:**
-```
-www/index.html → android/app/src/main/assets/public/index.html
-www/**        → android/app/src/main/assets/public/**
-capacitor.config.json → android/app/src/main/assets/
-```
-
-### 2. Android Build
-
-```bash
-cd android
-./gradlew assembleDebug
-```
-
-**Gradle tasks:**
-1. `preBuild` - Check dependencies
-2. `compileDebugJavaWithJavac` - Compile Java
-3. `mergeDebugResources` - Merge resources
-4. `processDebugManifest` - Process manifest
-5. `packageDebug` - Create APK
-6. `assembleDebug` - Final assembly
-
-**Output:** `android/app/build/outputs/apk/debug/app-debug.apk`
-
-### 3. APK Structure
-
-```
-app-debug.apk
-├── AndroidManifest.xml
-├── classes.dex            # Compiled Java
-├── resources.arsc         # Binary resources
-├── assets/
-│   └── public/
-│       └── index.html     # Your web app
-└── lib/
-    └── arm64-v8a/         # Native libraries
+// Notifications
+function showNotification(message, isError)
+function displayUsageStats(usage)
 ```
 
 ---
 
-## Future Architecture Improvements
+### Card Management API
 
-### 1. Code Splitting
+```javascript
+// Render
+function renderCards()
+function updateCardCount()
 
-Split `index.html` into modules:
+// CRUD Operations
+function addNewCard()                                 // Create
+function deleteCard(cardId, cardName)                 // Delete
+function updateCardName()                             // Update
+
+// AI Integration
+function fetchAndSaveCardRules()                      // Fetch from AI
+function refreshCardRules(cardId, cardName)          // Refresh from AI
+function reloadRulesInModal()                         // Reload in modal
+```
+
+---
+
+### AI API
+
+```javascript
+// Core AI function
+async function fetchGeminiResponse(systemPrompt, userQuery)
+// Returns: { text: string, usage: { promptTokens, responseTokens, totalTokens, requestCount } }
+
+// High-level functions
+async function generateSuggestion()                   // Get recommendation
+async function fetchAndSaveCardRules()                // Fetch card rules
+async function refreshCardRules(cardId, cardName)    // Refresh rules
+```
+
+---
+
+### Utility API
+
+```javascript
+// Markdown
+function markdownToHtml(markdown)                     // Convert MD to HTML
+
+// Validation
+function isApiKeyConfigured()                         // Check if key exists
+
+// State
+let cardList = []                                     // Global card array
+let currentViewingCardId = null                       // Modal state
+```
+
+---
+
+## 🔮 Future Architecture Considerations
+
+### Scalability
+
+**Current Limits**:
+- localStorage: ~5-10 MB
+- ~50-100 cards max (theoretical)
+- Single user per device
+
+**If scaling needed**:
+- Use IndexedDB for larger storage
+- Implement pagination for card list
+- Add search/filter functionality
+
+---
+
+### Modularity
+
+**Current**: Monolithic single file
+
+**Future Option**: Modular architecture
 ```
 www/
-├── index.html
+├── index.html (shell)
 ├── js/
-│   ├── api.js          # Gemini API calls
-│   ├── storage.js      # localStorage logic
-│   ├── ui.js           # Rendering functions
-│   └── utils.js        # Helpers
+│   ├── storage.js
+│   ├── ai.js
+│   ├── ui.js
+│   ├── cards.js
+│   └── utils.js
 └── css/
-    └── styles.css      # Custom CSS
+    └── app.css
 ```
 
-### 2. State Management
+**Trade-off**: Complexity vs. maintainability
 
-Implement reactive state:
-```javascript
-const state = {
-  cards: [],
-  apiKey: '',
-  usage: {}
-};
+---
 
-// Reactive updates
-const setState = (updates) => {
-  Object.assign(state, updates);
-  render(); // Re-render UI
-};
+### Backend Integration
+
+**Current**: Serverless (API-only)
+
+**Future Option**: Optional backend
 ```
+Benefits:
+- Cross-device sync
+- Cloud backup
+- User accounts
+- Analytics (privacy-respecting)
 
-### 3. Service Worker
-
-Add offline capabilities:
-```javascript
-// sw.js
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
-});
-```
-
-### 4. Firebase Integration (Optional)
-
-```
-Firebase
-├── Authentication (Email/Google)
-├── Firestore (Cloud sync)
-├── Analytics (Usage tracking)
-└── Remote Config (Feature flags)
+Challenges:
+- Infrastructure cost
+- Privacy concerns
+- Complexity increase
 ```
 
 ---
 
-## Dependencies
+## 📝 Summary
 
-### Runtime Dependencies
+### Key Architectural Strengths
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| Capacitor | 5.x+ | Web-to-Native bridge |
-| Tailwind CSS | 3.x CDN | Styling framework |
-| Gemini API | 2.5-flash | AI engine |
+1. ✅ **Simple**: One HTML file, zero backend
+2. ✅ **Fast**: Instant load, local storage
+3. ✅ **Private**: No cloud, no tracking
+4. ✅ **Reliable**: Offline-first, minimal dependencies
+5. ✅ **Maintainable**: Clear structure, inline everything
+6. ✅ **Secure**: Sandboxed storage, HTTPS API
 
-### Build Dependencies
+### Trade-offs Accepted
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| Gradle | 8.11+ | Build system |
-| Android Gradle Plugin | 8.x | Android build |
-| Java/Kotlin | 17+ | Compilation |
+1. ⚠️ Large single file (manageable for solo dev)
+2. ⚠️ No cross-device sync (privacy trade-off)
+3. ⚠️ WebView performance (acceptable for use case)
+4. ⚠️ Manual build process (simple enough)
 
-### No npm Dependencies!
+### Result
 
-Pure HTML/JS app - no package.json needed.
-
----
-
-## Monitoring & Analytics
-
-### Current Tracking
-
-- **Console Logs**: Development debugging
-- **Usage Toast**: Per-request token count
-- **Error Notifications**: User-facing errors
-
-### Future Analytics (Optional)
-
-Could add:
-- Firebase Analytics
-- Error reporting (Sentry)
-- Performance monitoring
-- User behavior tracking
+**A lean, privacy-focused, AI-powered credit card advisor that works beautifully on Android without any backend infrastructure.**
 
 ---
 
-## API Costs Estimation
-
-**Gemini 2.5 Flash Pricing** (as of 2025):
-- Free tier: 1,500 requests/day
-- Paid: ~$0.15 per 1M tokens
-
-**Typical Usage:**
-- Card lookup: ~2,000 tokens
-- Recommendation: ~3,000 tokens
-- 100 operations/month: ~300,000 tokens = ~$0.05
-
-**Cost-effective for personal use!**
-
----
-
-## Deployment Checklist
-
-- [ ] Test on multiple devices
-- [ ] Verify API key masking
-- [ ] Check all animations
-- [ ] Test error scenarios
-- [ ] Validate localStorage persistence
-- [ ] Review console for errors
-- [ ] Test offline graceful degradation
-- [ ] Verify S24 full-screen mode
-- [ ] Check status bar icons (dark/light)
-- [ ] Test rate limiting behavior
-- [ ] Validate usage stats accuracy
-- [ ] Check markdown rendering
-- [ ] Test LaTeX cleanup
-- [ ] Verify rupee symbol display
-
----
-
-**Documentation Version:** 1.0  
-**Last Updated:** 2025-11-12  
-**Architecture Status:** ✅ Stable
+**Architecture Document Version**: 1.1  
+**Last Updated**: January 2025  
+**Maintained by**: Deepu Mungamuri
 

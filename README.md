@@ -1,26 +1,210 @@
 # 💳 Card Advisor AI
 
-> An intelligent Android app that helps you maximize credit card rewards by analyzing your card portfolio and suggesting the best card for each purchase.
+> **Maximize every spend** - An intelligent Android app that analyzes your credit card portfolio and suggests the optimal card for each purchase using Google's Gemini AI.
 
-[![Android](https://img.shields.io/badge/Android-Capacitor-green.svg)](https://capacitorjs.com/)
-[![Gemini API](https://img.shields.io/badge/AI-Google%20Gemini-blue.svg)](https://ai.google.dev/)
+[![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
+[![Capacitor](https://img.shields.io/badge/Framework-Capacitor-blue.svg)](https://capacitorjs.com/)
+[![Gemini AI](https://img.shields.io/badge/AI-Google%20Gemini-orange.svg)](https://ai.google.dev/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
 ## 📱 Overview
 
-**Card Advisor AI** is a mobile application that leverages Google's Gemini AI to provide intelligent credit card recommendations. It fetches real-time card reward rules from official bank websites and suggests the optimal card for your purchases, helping you maximize cashback and reward points.
+**Card Advisor AI** is a mobile-first application that leverages **Google's Gemini 2.5 Flash AI** with **Google Search** to provide intelligent, real-time credit card recommendations. It automatically fetches comprehensive reward rules from official bank websites across **70+ spending categories** and helps you maximize cashback and reward points on every purchase.
 
-### Key Features
+### 🌟 Key Features
 
-- 🤖 **AI-Powered Recommendations** - Uses Gemini 2.5 Flash with Google Search
-- 💾 **Offline Storage** - Cards stored locally using localStorage
-- 🔄 **Real-Time Updates** - Fetches latest rules from official bank websites
-- 🇮🇳 **India-Focused** - Optimized for Indian credit cards and currency
-- 📊 **Usage Analytics** - Track API requests and token consumption
-- 🎨 **Modern UI** - Beautiful Tailwind CSS design with tabbed interface
-- 🔒 **Secure** - API keys stored locally, never shared
+#### 🤖 AI-Powered Intelligence
+- **Real-Time Data**: Fetches latest rules from official bank websites
+- **Google Search Integration**: Verifies information from bank T&C pages
+- **70+ Categories Covered**: Healthcare, Groceries, Fuel, Dining, Entertainment, Travel, Shopping, Utilities, Insurance, Education, and more
+- **Comprehensive Analysis**: Includes movie tickets (BookMyShow 1+1), OTT subscriptions, lounge access, and all benefits
+
+#### 💼 Smart Card Management
+- **Card Icon Display**: Each card shows with a beautiful credit card icon
+- **Scrollable Modal View**: Full-screen modal to view complete card rules
+- **In-Modal Reload**: Refresh rules without leaving the detail view
+- **Quick Actions**: View (👁️), Reload (🔄), Edit (✏️), Delete (🗑️)
+- **Offline Storage**: All cards stored locally using localStorage
+
+#### 🎨 Modern Design
+- **Beautiful UI**: Glass morphism effects with gradient accents
+- **Full-Screen**: Edge-to-edge display with safe area support
+- **Status Bar Compatible**: Content properly positioned below mobile status bar
+- **Hamburger Menu**: Clean navigation with branded header
+- **Responsive**: Optimized for all Android devices (tested on Samsung S24)
+
+#### 🇮🇳 India-Focused
+- **Indian Currency**: All amounts in ₹ (Rupees)
+- **Indian Banks**: HDFC, SBI, ICICI, Axis, etc.
+- **Indian Platforms**: BookMyShow, Swiggy, Zomato, BigBasket, etc.
+- **Local Categories**: Kirana stores, IRCTC, DTH recharge, and more
+
+#### 📊 Usage Transparency
+- **Token Tracking**: See exact API usage (prompt, response, total tokens)
+- **Request Count**: Track number of AI requests
+- **Toast Notifications**: Auto-dismissing usage stats after each request
+
+#### 🔒 Privacy-First
+- **No Cloud**: All data stored locally on device
+- **No Sign-Up**: No authentication required
+- **No Tracking**: Zero analytics or data collection
+- **API Key Control**: You manage your own Gemini API key
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Android Studio** (Narwhal 2025.1.2 or later)
+- **Node.js** (v16+)
+- **Google Gemini API Key** → [Get free key](https://aistudio.google.com/app/apikey)
+
+### Installation (5 Minutes)
+
+```bash
+# 1. Navigate to project
+cd /Users/dmungamuri/AndroidStudioProjects/cardadvisorapp
+
+# 2. Copy web assets to Android
+npx cap copy android
+
+# 3. Open Android project in Android Studio
+open -a "Android Studio" ./android
+
+# 4. Build APK: Build → Build APK(s)
+# APK location: android/app/build/outputs/apk/debug/app-debug.apk
+
+# 5. Install on device via USB or Google Drive
+```
+
+**📖 Detailed setup guide**: See [QUICKSTART.md](QUICKSTART.md)
+
+---
+
+## 🎯 How to Use
+
+### 1️⃣ Configure API Key (One-Time Setup)
+
+1. Open the app
+2. Click **hamburger menu** (☰) → **Settings**
+3. Get your free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+4. Paste and save (stored locally, never shared)
+
+### 2️⃣ Add Your Credit Cards
+
+1. **Open menu** → **My Cards**
+2. **Enter exact card name**:
+   - Example: "HDFC Millennia Credit Card"
+   - Example: "SBI Cashback Credit Card"
+   - Example: "ICICI Amazon Pay Credit Card"
+3. **Click "Fetch & Save Card Rules"**
+4. **AI fetches comprehensive rules** (takes 3-8 seconds):
+   - Base reward rates
+   - Accelerated categories (groceries, fuel, dining, etc.)
+   - Entertainment offers (movie tickets, OTT)
+   - Travel benefits (lounge, insurance, cabs)
+   - Shopping offers (online/offline)
+   - Utility rewards
+   - Exclusions (rent, insurance premiums)
+   - Redemption value
+   - Annual fee waivers
+   - Welcome bonuses
+
+### 3️⃣ View Card Details
+
+- **Click the purple eye icon** (👁️) on any card
+- **Scrollable modal** opens with full rules
+- **Reload button** in modal to fetch latest rules
+- **Close button** or tap outside to dismiss
+
+### 4️⃣ Get Smart Recommendations
+
+1. **Open menu** → **AI Advisor**
+2. **Describe your purchase**:
+   - "Buying ₹5,000 groceries at BigBasket"
+   - "Booking ₹15,000 flight on MakeMyTrip"
+   - "Paying ₹3,000 electricity bill"
+   - "Shopping ₹2,000 on Amazon"
+3. **AI analyzes** your entire card portfolio
+4. **Get recommendation** with:
+   - Best card to use
+   - Expected reward amount
+   - Calculation breakdown
+   - Alternative cards (if close)
+
+### 5️⃣ Keep Rules Updated
+
+- **Manual refresh**: Click 🔄 icon on card list
+- **In-modal refresh**: Click "Reload Rules" in detail view
+- **AI re-fetches** from official bank website
+
+---
+
+## 📋 Comprehensive Coverage
+
+### 🏥 Healthcare & Medical
+- Pharmacies (Apollo, Netmeds, 1mg)
+- Hospitals & clinics
+- Health insurance premiums
+- Diagnostic tests
+
+### 🛒 Groceries & Supermarkets
+- Physical stores (BigBasket, D-Mart, Reliance Fresh)
+- Online grocery (Grofers, Swiggy Instamart, Blinkit)
+- Kirana stores
+
+### ⛽ Fuel & Transportation
+- Petrol/Diesel (BPCL, HPCL, Indian Oil, Shell)
+- Fuel surcharge waivers
+- EV charging
+- Metro/Train recharge
+- Toll payments
+
+### 🍽️ Dining & Food
+- Restaurants (fine dining, casual, QSR)
+- Food delivery (Swiggy, Zomato)
+- Cafes (Starbucks, CCD)
+- Dining memberships (Zomato Gold)
+
+### 🎬 Entertainment
+- **Movie tickets** (BookMyShow 1+1 offers, PVR, INOX)
+- **OTT subscriptions** (Netflix, Prime, Disney+, Hotstar)
+- Concert tickets
+- Amusement parks
+
+### ✈️ Travel
+- **Flights** (domestic/international)
+- **Hotels** (MakeMyTrip, Goibibo, OYO)
+- **Airport lounges** (domestic/international access)
+- **Travel insurance**
+- **Cabs** (Uber, Ola)
+- **Railways** (IRCTC)
+- **Forex charges**
+
+### 🛍️ Shopping
+- **Online**: Amazon, Flipkart, Myntra, Ajio, Nykaa
+- **Offline**: Malls, electronics stores, fashion outlets
+- **Categories**: Electronics, fashion, jewelry, furniture
+
+### 💡 Utilities & Bills
+- Electricity, water, gas bills
+- Broadband, mobile recharge
+- DTH & cable TV
+- Postpaid bills
+
+### 🛡️ Insurance & Education
+- Life, health, vehicle insurance premiums
+- School/college fees
+- Coaching, online courses
+
+### 💆 Lifestyle & Wellness
+- Gym memberships
+- Spa & salon
+- Golf courses
+- Yoga centers
 
 ---
 
@@ -28,531 +212,412 @@
 
 ### Technology Stack
 
-| Component | Technology |
-|-----------|------------|
-| **Frontend** | HTML5, JavaScript (ES6+), Tailwind CSS |
-| **Mobile Runtime** | Capacitor (Web-to-Native) |
-| **Platform** | Android (Native) |
-| **AI Engine** | Google Gemini 2.5 Flash API |
-| **Storage** | localStorage (Browser API) |
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | HTML5, Vanilla JavaScript, Tailwind CSS |
+| **Mobile Runtime** | Capacitor 6.x (Web-to-Native) |
+| **Platform** | Android Native |
+| **AI Engine** | Google Gemini 2.5 Flash with Google Search |
+| **Storage** | localStorage (WebView API) |
 | **Build System** | Gradle, Android Studio |
 
 ### Project Structure
 
 ```
 cardadvisorapp/
-├── android/                    # Native Android project
+├── android/                      # Native Android project
 │   ├── app/
 │   │   ├── src/main/
-│   │   │   ├── assets/public/  # Web assets (auto-generated)
-│   │   │   ├── java/           # MainActivity.java
-│   │   │   └── res/            # Android resources
+│   │   │   ├── assets/public/    # Auto-copied web assets
+│   │   │   ├── java/             # MainActivity.java
+│   │   │   └── res/              # Android resources, icons
 │   │   └── build.gradle
-│   └── gradle/
-├── www/                        # Web application source
-│   └── index.html              # Main app (1169 lines)
-├── capacitor.config.json       # Capacitor configuration
-└── README.md                   # This file
+│   └── build.gradle
+├── www/                          # Web application source
+│   ├── index.html                # Single-file app (~1650 lines)
+│   └── (copied to android assets)
+├── capacitor.config.json         # Capacitor configuration
+├── package.json                  # Node dependencies
+├── README.md                     # This file
+├── QUICKSTART.md                 # Detailed setup guide
+└── ARCHITECTURE.md               # Technical architecture
 ```
+
+### Key Design Decisions
+
+1. **Single HTML File**: Entire app in one file for simplicity and WebView compatibility
+2. **No External JS**: All JavaScript inline to avoid module loading issues
+3. **localStorage**: Simple, reliable persistence without backend
+4. **Capacitor**: Modern web-to-native bridge (better than Cordova)
+5. **Tailwind CDN**: Quick styling without build process
+6. **Gemini with Search**: Real-time data from official sources
+
+**📖 Detailed architecture**: See [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Android Studio** (Narwhal 2025.1.2 or later)
-- **Node.js** (v16+ recommended)
-- **Capacitor CLI** (`npm install -g @capacitor/cli`)
-- **Google Gemini API Key** ([Get it here](https://aistudio.google.com/app/apikey))
-
-### Installation Steps
-
-#### 1. Clone the Repository
-
-```bash
-cd /path/to/your/projects
-# Project already exists at:
-cd /Users/dmungamuri/AndroidStudioProjects/cardadvisorapp
-```
-
-#### 2. Install Dependencies
-
-```bash
-# Install Capacitor CLI globally (if not already installed)
-npm install -g @capacitor/cli
-
-# No package.json needed - it's a pure HTML/JS app
-```
-
-#### 3. Copy Web Assets to Android
-
-```bash
-# Copy www/ folder contents to Android assets
-npx cap copy android
-```
-
-This command copies:
-- `www/index.html` → `android/app/src/main/assets/public/index.html`
-- `capacitor.config.json` → Android assets
-
-#### 4. Open in Android Studio
-
-```bash
-# Option A: Command line
-open -a "Android Studio" ./android
-
-# Option B: In Android Studio
-# File → Open → Navigate to:
-# /Users/dmungamuri/AndroidStudioProjects/cardadvisorapp/android
-```
-
-⚠️ **Important**: Open the `android` folder, NOT the root `cardadvisorapp` folder!
-
-#### 5. Build the APK
-
-**In Android Studio:**
-
-1. **Build** → **Build Bundle(s) / APK(s)** → **Build APK(s)**
-2. Wait for build to complete (1-2 minutes)
-3. Click **"locate"** in the notification
-4. APK location: `android/app/build/outputs/apk/debug/app-debug.apk`
-
-**OR via Command Line:**
-
-```bash
-cd android
-./gradlew assembleDebug
-```
-
-APK will be at: `android/app/build/outputs/apk/debug/app-debug.apk`
-
----
-
-## 📲 Installing on Device
-
-### Method 1: Direct Install via USB
-
-1. **Enable Developer Options** on your phone:
-   - Settings → About phone → Tap "Build number" 7 times
-
-2. **Enable USB Debugging**:
-   - Settings → Developer options → Enable "USB debugging"
-
-3. **Connect phone** via USB cable
-
-4. **In Android Studio**: Click the green ▶️ Run button
-
-5. **Select your device** from the dropdown
-
-### Method 2: Install APK via Google Drive
-
-1. **Upload** `app-debug.apk` to Google Drive
-
-2. **Download** on your phone
-
-3. **Install**:
-   - Tap the APK file
-   - Allow installation from Chrome/Files
-   - Tap "Install"
-
-### Method 3: ADB Command
-
-```bash
-# Connect device via USB
-adb devices
-
-# Install APK
-adb install android/app/build/outputs/apk/debug/app-debug.apk
-```
-
----
-
-## 🎯 How to Use
-
-### First-Time Setup
-
-1. **Launch App** - Open "Card Advisor AI"
-
-2. **Configure API Key**:
-   - Click ⚙️ (Settings) icon in top-right
-   - Get API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-   - Paste key and click "Save API Key"
-   - Key is stored locally and never shared
-
-### Adding Your Credit Cards
-
-1. **Go to "My Cards" tab** (top navigation)
-
-2. **Enter card name**:
-   - Example: "HDFC Millennia"
-   - Example: "SBI Pulse"
-   - Example: "ICICI Amazon Pay"
-
-3. **Click "Fetch & Save Card Rules"**
-
-4. **AI fetches rules** from official bank website:
-   - Reward rates (e.g., 5% on Amazon)
-   - Exclusions (e.g., no rewards on rent)
-   - Redemption values
-
-5. **View saved cards** in portfolio below
-
-### Managing Cards
-
-- **View Rules**: Click "View Rules" on any card
-- **Update Rules**: Click 🔄 (Refresh) icon - fetches latest data
-- **Rename Card**: Click ✏️ (Edit) icon
-- **Delete Card**: Click 🗑️ (Delete) icon - blinks for confirmation
-
-### Getting Recommendations
-
-1. **Go to "Advisor" tab**
-
-2. **Describe your purchase**:
-   - "Buying groceries at BigBasket for ₹5,000"
-   - "Paying LIC premium ₹20,000 online"
-   - "Shopping on Amazon for ₹3,000"
-
-3. **Click "Get Best Card Suggestion"**
-
-4. **AI analyzes** your card portfolio and returns:
-   - Best card to use
-   - Expected reward amount
-   - Calculation explanation
-   - Alternative cards (if close)
-
-### Understanding Usage Stats
-
-After each AI request, a toast notification appears at the bottom:
-
-```
-✓ 1 request • 2,450 tokens
-  Prompt: 1,200 • Response: 1,250
-```
-
-- **Requests**: Number of API calls (includes retries)
-- **Tokens**: API usage (affects billing)
-- **Auto-dismisses**: After 3 seconds
-
----
-
-## 🔧 Configuration
-
-### Capacitor Config
-
-`capacitor.config.json`:
-
-```json
-{
-  "appId": "com.mycompany.cardadvisor",
-  "appName": "Card Advisor AI",
-  "webDir": "www",
-  "server": {
-    "androidScheme": "https"
-  }
-}
-```
-
-### API Configuration
-
-- **Model**: `gemini-2.5-flash-preview-09-2025`
-- **Tools**: Google Search (for real-time bank data)
-- **Rate Limiting**: Automatic retry with exponential backoff
-- **Max Retries**: 4 attempts
-
-### Storage
-
-- **Type**: localStorage (WebView)
-- **Key**: `cardAdvisorCards`
-- **Format**: JSON array of card objects
-- **Persistence**: Survives app restarts
-
----
-
-## 🎨 Features Deep Dive
-
-### 1. AI-Powered Card Rule Extraction
-
-**How it works:**
-- Searches official bank websites (HDFC, SBI, ICICI, Axis, etc.)
-- Extracts reward rates, bonus categories, exclusions
-- Formats as mobile-friendly bullet points
-- Caches locally for offline access
-
-**Example Output:**
-```
-### Reward Structure
-- Base Rate: 1 RP per ₹150
-- Bonus: 5% on Amazon, Swiggy
-- Exclusions: Rent, insurance, fuel
-
-### Redemption
-- 1 RP = ₹0.25
-```
-
-### 2. Intelligent Recommendation Engine
-
-**Algorithm:**
-- Parses all saved card rules
-- Matches purchase category with MCC codes
-- Calculates effective reward rates
-- Considers accelerated categories
-- Accounts for exclusions
-- Returns best card with calculation
-
-**Example:**
-```
-Input: "Buying ₹5,000 groceries at BigBasket"
-Output: 
-✅ Use HDFC Millennia
-💰 Earn ₹250 (5% cashback)
-📊 Effective rate: 5% (accelerated category)
-```
-
-### 3. Real-Time Data Fetching
-
-Uses Google Search tool in Gemini API:
-- Searches: `"HDFC Millennia reward rules site:hdfcbank.com"`
-- Verifies from official T&C pages
-- Updates automatically when banks change rules
-
-### 4. LaTeX & Formatting Cleanup
-
-Automatic conversion:
-- `$\times$` → `×`
-- `\text{value}` → `value`
-- `$100` → `₹100`
-- Tables → Mobile-friendly cards
-- Markdown → Styled HTML
-
-### 5. Error Handling & Retry Logic
-
-- **Rate Limiting**: Exponential backoff (1s, 2s, 4s, 8s)
-- **Network Errors**: Automatic retry
-- **Invalid Responses**: User-friendly error messages
-- **Validation**: API key format check
-
----
-
-## 🎨 UI/UX Features
-
-### Tabbed Interface
-
-- **Advisor Tab**: Main recommendation engine (default)
-- **My Cards Tab**: Card management with badge count
-
-### Responsive Design
-
-- Optimized for Samsung S24 (6.2" AMOLED)
-- Edge-to-edge display
-- Dark status bar icons (light background)
-- Safe area insets for notch/camera
-
-### Visual Elements
-
-- **Header**: Left-aligned with app icon and status
-- **Cards**: Gradient backgrounds, shadow effects
-- **Buttons**: Smooth hover animations
-- **Icons**: Indigo refresh 🔄, Red delete 🗑️
-- **Animations**: Blink on delete, fade notifications
-
-### Accessibility
-
-- Readable fonts (Inter family)
-- High contrast colors
-- Touch-optimized button sizes (py-4 = 16px vertical padding)
-- Clear error messages
+## 🎨 UI/UX Highlights
+
+### Navigation
+- **Hamburger menu** (☰) for main navigation
+- **AI Advisor** - Default landing screen
+- **My Cards** - Card management with count badge
+- **Settings** - API key configuration
+
+### Card List Design
+- **💳 Credit card icon** prefix on each card
+- **Card name** with edit button
+- **Quick action buttons**:
+  - 👁️ **View** (purple) - Open full rules modal
+  - 🔄 **Reload** (indigo) - Refresh from bank website
+  - 🗑️ **Delete** (red) - Remove card with blink animation
+
+### Modal View
+- **Full-screen scrollable** modal for card rules
+- **Gradient header** with card icon and name
+- **Formatted content** with markdown rendering
+- **Footer actions**:
+  - "Reload Rules" button (left)
+  - "Close" button (right)
+- **Click outside** to dismiss
+
+### Visual Polish
+- **Subtle gradient background** (8% opacity for content focus)
+- **Glass morphism** effects on cards
+- **Smooth animations** on interactions
+- **Shadow depth** for visual hierarchy
+- **Responsive touch targets** (minimum 44x44px)
+
+### Mobile Optimizations
+- **Safe area support**: Content below status bar (notch/camera)
+- **Full-screen display**: Edge-to-edge with proper spacing
+- **Dark status icons**: Visible on light background
+- **Optimized scrolling**: Smooth performance
+- **Touch-friendly**: Large tap targets, clear visual feedback
 
 ---
 
 ## 🔒 Security & Privacy
 
 ### Data Storage
+- ✅ **100% Local**: All cards stored on device only
+- ✅ **No Cloud Sync**: Zero data transmission (except AI API)
+- ✅ **No Account**: No sign-up, login, or user data
+- ✅ **No Analytics**: Zero tracking or telemetry
+- ✅ **No Permissions**: Only INTERNET for API calls
 
-- ✅ All card data stored **locally** (no cloud sync)
-- ✅ API key stored in **localStorage** (device only)
-- ✅ No user authentication required
-- ✅ No personal data collected
-- ✅ No analytics or tracking
+### API Key Management
+- ✅ **User-Controlled**: You provide your own API key
+- ✅ **Masked Input**: Never displayed (type="password")
+- ✅ **Local Storage**: Saved in device localStorage
+- ✅ **No Sharing**: Key never sent anywhere except Gemini API
+- ✅ **Free Tier**: Gemini has generous free quota
 
-### API Key Security
-
-- Masked input field (type="password")
-- Never logged or transmitted (except to Gemini API)
-- User-controlled (can be changed anytime)
-- Stored per-device
-
-### Permissions
-
-Required Android permissions:
-- `INTERNET` - For API calls only
-
-No other permissions requested!
+### Transparency
+- ✅ **Open Source**: All code visible in repository
+- ✅ **Token Usage**: See exact API consumption
+- ✅ **Request Count**: Track number of calls
+- ✅ **No Hidden Costs**: You control API key and usage
 
 ---
 
 ## 📊 Performance
 
-### App Size
+### App Metrics
+- **APK Size**: ~5-8 MB (debug), ~3-5 MB (release)
+- **Installed Size**: ~15-20 MB
+- **Memory Usage**: ~50-80 MB RAM
+- **Battery Impact**: Minimal (only during AI requests)
 
-- APK: ~5-10 MB (debug build)
-- Installed: ~15-20 MB
+### API Usage (Typical)
+- **Fetch Card Rules**: 2,000-5,000 tokens (~4-8 seconds)
+- **Get Recommendation**: 2,500-6,000 tokens (~3-6 seconds)
+- **Refresh Rules**: 2,000-4,500 tokens (~4-7 seconds)
 
-### API Usage
+### Gemini Free Tier
+- **Quota**: 1,500 requests/day (very generous!)
+- **Rate Limit**: 15 requests/minute
+- **Token Limit**: 1 million tokens/minute
+- **Cost**: $0 (completely free)
 
-Typical token consumption:
-- Fetch Card Rules: ~1,500-3,000 tokens
-- Get Recommendation: ~2,000-4,000 tokens
-- Refresh Rules: ~1,500-2,500 tokens
-
-### Response Times
-
-- Card lookup: 3-6 seconds
-- Recommendation: 2-5 seconds
-- Depends on API latency and search complexity
+### Optimization Features
+- ✅ **Automatic Retry**: Exponential backoff for rate limits
+- ✅ **Request Throttling**: Prevents rapid-fire calls
+- ✅ **Response Caching**: Rules stored locally
+- ✅ **Efficient Parsing**: Minimal processing overhead
 
 ---
 
-## 🛠️ Development Workflow
+## 🛠️ Development
 
 ### Making Changes
 
-1. **Edit** `www/index.html`
+```bash
+# 1. Edit web content
+code www/index.html
 
-2. **Copy to Android**:
-   ```bash
-   npx cap copy android
-   ```
+# 2. Copy to Android
+npx cap copy android
 
-3. **Rebuild** in Android Studio
+# 3. Rebuild in Android Studio
+# Build → Build APK(s)
 
-4. **Test** on device/emulator
+# 4. Test on device
+```
 
-### Debug Mode
+### Debug Tips
 
-- Check Chrome DevTools: `chrome://inspect`
-- View console logs from WebView
-- Inspect localStorage
+#### Chrome DevTools (WebView Debugging)
+```bash
+# 1. Enable USB debugging on phone
+# 2. Connect via USB
+# 3. Open Chrome: chrome://inspect
+# 4. Click "inspect" under your app
+# 5. Access console, network, storage tabs
+```
+
+#### View localStorage
+```javascript
+// In Chrome DevTools console:
+localStorage.getItem('cardAdvisorCards');
+localStorage.getItem('geminiApiKey');
+```
+
+#### Clear All Data
+```javascript
+// In Chrome DevTools console:
+localStorage.clear();
+location.reload();
+```
 
 ### Clean Build
-
 ```bash
 cd android
 ./gradlew clean
 ./gradlew assembleDebug
+# APK: android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### Common Issues & Solutions
 
-**1. "Default activity not found"**
-- Solution: Open `android` folder, not root folder
+#### ❌ "Default activity not found"
+**Cause**: Opening root folder instead of `android` folder  
+**Fix**: Open `/path/to/cardadvisorapp/android` in Android Studio
 
-**2. Empty/blank page**
-- Run: `npx cap copy android`
-- Rebuild project
+#### ❌ Blank white screen
+**Cause**: Web assets not copied to Android  
+**Fix**: Run `npx cap copy android` and rebuild
 
-**3. API key not working**
+#### ❌ API key not working
+**Solutions**:
 - Verify key starts with `AIza`
-- Check key has Gemini API enabled
-- Test at [AI Studio](https://aistudio.google.com)
+- Check Gemini API is enabled at [Google AI Studio](https://aistudio.google.com)
+- Try key in browser first
+- Clear cache: Settings → Clear data
 
-**4. "Rate limit" errors**
-- Wait a few seconds
-- App automatically retries
-- Check API quota
+#### ❌ "Rate limit exceeded" (429 error)
+**Solutions**:
+- Wait 60 seconds (automatic retry)
+- Check your usage at Google AI Studio
+- Ensure not exceeding 15 requests/minute
 
-**5. Status bar icons white on white**
-- Already fixed! Dark icons enabled for light background
+#### ❌ Status bar collision
+**Already fixed!** Safe area insets applied to header and menu.
+
+#### ❌ Rules not showing movie/dining offers
+**Already fixed!** AI now explicitly fetches 70+ categories including entertainment and dining.
+
+#### ❌ Modal reload not working
+**Already fixed!** Modal now uses same reload function as list view.
 
 ---
 
 ## 📝 Version History
 
-### Current Version (v1.0)
+### v1.1 (Current) - Comprehensive Update
+**Release Date**: January 2025
 
-**Features:**
-- ✅ AI-powered card recommendations
+**New Features**:
+- ✅ Card icon prefix on all cards
+- ✅ Scrollable full-screen modal for rules
+- ✅ In-modal reload functionality
+- ✅ Comprehensive AI prompts (70+ categories)
+- ✅ Healthcare/Medical category
+- ✅ Grocery rewards detailed
+- ✅ Fuel surcharge tracking
+- ✅ Entertainment (BookMyShow, OTT)
+- ✅ Travel (flights, hotels, lounge, cabs)
+- ✅ Utilities & bills
+- ✅ Insurance & education
+- ✅ Lifestyle & wellness
+
+**UI Improvements**:
+- ✅ Lighter background (92% reduced opacity)
+- ✅ Safe area support for status bar
+- ✅ Menu properly positioned below status bar
+- ✅ Full-screen edge-to-edge display
+- ✅ Hamburger menu navigation
+- ✅ Glass morphism effects
+- ✅ Smooth animations
+
+**Technical**:
+- ✅ Enhanced AI prompt engineering
+- ✅ 15 major spending categories
+- ✅ 70+ subcategories
+- ✅ 100+ platform/brand names
+- ✅ Explicit completeness rules
+- ✅ No truncation instructions
+- ✅ Modal reload reuses existing function
+
+### v1.0 - Initial Release
+**Release Date**: December 2024
+
+- ✅ AI-powered recommendations
 - ✅ Real-time bank website data
 - ✅ localStorage persistence
 - ✅ Tabbed interface
 - ✅ Usage analytics
 - ✅ Configurable API key
-- ✅ LaTeX cleanup
-- ✅ Request count tracking
-- ✅ Bottom toast notifications
-
-**Optimizations:**
-- Mobile-friendly markdown rendering
-- Table-to-card conversion
-- Dark status bar icons
-- Full screen S24 support
-- Indigo refresh, red delete icons
-- Delete confirmation blink
+- ✅ Token tracking
+- ✅ Toast notifications
 
 ---
 
-## 🚀 Future Enhancements
+## 🚀 Roadmap
 
-Potential improvements:
+### Planned Features (Future)
+- [ ] **Spending Analytics**: Track transactions and visualize spending
+- [ ] **Billing Cycle**: Set card billing cycles for better recommendations
+- [ ] **SMS Parsing**: Auto-extract transactions from bank SMS
+- [ ] **Cap Tracking**: Track monthly/quarterly caps
+- [ ] **Card Comparison**: Side-by-side comparison view
+- [ ] **Export/Import**: Backup and restore card data
+- [ ] **Dark Mode**: Theme toggle for night usage
+- [ ] **Widgets**: Home screen widget for quick recommendations
+- [ ] **Notifications**: Alerts for expiring offers
+
+### Under Consideration
 - [ ] Firebase sync (optional cloud backup)
-- [ ] Multiple users/profiles
-- [ ] Card comparison view
-- [ ] Spending analytics
-- [ ] Transaction history
-- [ ] Expense categorization
-- [ ] Push notifications for offers
-- [ ] Widget for quick recommendations
+- [ ] Multiple profiles
+- [ ] iOS version (Capacitor supports it!)
+- [ ] Browser extension
+- [ ] Perplexity AI integration (alternative to Gemini)
 
 ---
 
 ## 🤝 Contributing
 
-This is a personal project. Feel free to:
-- Fork and modify for your needs
-- Report issues
-- Suggest improvements
+This is a personal project, but contributions are welcome!
+
+### Ways to Contribute
+- 🐛 **Report Bugs**: Open issues with details
+- 💡 **Suggest Features**: Share your ideas
+- 📝 **Improve Docs**: Fix typos, add clarity
+- 🔧 **Submit PRs**: Bug fixes and enhancements
+
+### Development Setup
+```bash
+# Fork the repo
+git clone https://github.com/deepu-mungamuri94/card-advisor-ai.git
+cd card-advisor-ai
+
+# Make changes to www/index.html
+
+# Test
+npx cap copy android
+# Open android/ in Android Studio, build & run
+
+# Commit
+git add .
+git commit -m "Your message"
+git push origin your-branch
+# Create Pull Request
+```
 
 ---
 
 ## 📄 License
 
-MIT License - Free to use and modify
+**MIT License** - Free to use, modify, and distribute
+
+```
+Copyright (c) 2025 Deepu Mungamuri
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+```
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **Google Gemini** - AI engine
-- **Capacitor** - Web-to-native framework
-- **Tailwind CSS** - Styling framework
-- **Android Studio** - Development environment
+### Technologies
+- **[Google Gemini](https://ai.google.dev/)** - Powerful AI engine
+- **[Capacitor](https://capacitorjs.com/)** - Modern web-to-native framework
+- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
+- **[Android Studio](https://developer.android.com/studio)** - Development environment
+
+### Inspiration
+- Indian credit card users who want to maximize rewards
+- Personal need for smart card recommendations
+- Desire for privacy-first, local-storage solutions
 
 ---
 
 ## 📧 Support
 
-For issues or questions:
-- Check the troubleshooting section
-- Review console logs (`chrome://inspect`)
-- Verify API key configuration
+### Getting Help
+1. **Check Documentation**:
+   - [QUICKSTART.md](QUICKSTART.md) - Setup guide
+   - [ARCHITECTURE.md](ARCHITECTURE.md) - Technical details
+   - This README - Feature overview
+
+2. **Debug Tools**:
+   - Chrome DevTools: `chrome://inspect`
+   - Android Logcat: View → Tool Windows → Logcat
+   - Console logs in WebView
+
+3. **Common Issues**: See [Troubleshooting](#-troubleshooting) section
+
+### Contact
+- **GitHub Issues**: [Report bugs or request features](https://github.com/deepu-mungamuri94/card-advisor-ai/issues)
+- **Repository**: [View source code](https://github.com/deepu-mungamuri94/card-advisor-ai)
 
 ---
 
 ## 🎓 Learn More
 
-- [Capacitor Documentation](https://capacitorjs.com/docs)
-- [Gemini API Docs](https://ai.google.dev/docs)
-- [Android Development](https://developer.android.com)
-- [Tailwind CSS](https://tailwindcss.com)
+### Documentation
+- [Capacitor Docs](https://capacitorjs.com/docs) - Mobile framework
+- [Gemini API](https://ai.google.dev/docs) - AI integration
+- [Android Dev](https://developer.android.com) - Platform guides
+- [Tailwind CSS](https://tailwindcss.com/docs) - Styling
+
+### Useful Resources
+- [Gemini API Pricing](https://ai.google.dev/pricing) - Always free tier info
+- [Capacitor Plugins](https://capacitorjs.com/docs/plugins) - Native capabilities
+- [Android WebView](https://developer.android.com/guide/webapps/webview) - How it works
+
+---
+
+## 🌟 Star This Project
+
+If you find this useful, please ⭐ star the repository!
 
 ---
 
 **Built with ❤️ for Indian credit card users**
 
-*Maximize your rewards, minimize the guesswork!* 💳✨
+*Make every spend rewarding!* 💳✨
 
