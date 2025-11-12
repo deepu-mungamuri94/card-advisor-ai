@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AI Card Advisor</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(180deg, #f3f4f6 0%, #f7f9fc 100px, #f7f9fc 100%);
+            padding-top: env(safe-area-inset-top);
+        }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); }
+        /* Custom scrollbar for better mobile feel */
+        .scrollable-cards::-webkit-scrollbar { display: none; }
+        .scrollable-cards { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Enhanced Markdown Rendering Styles */
+        #suggestion-result ul, #card-list ul {
+            list-style-type: none;
+            margin-left: 0;
+            padding-left: 0;
+        }
+        #suggestion-result li, #card-list li {
+            padding-left: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        #suggestion-result strong, #card-list strong {
+            font-weight: 700;
+        }
+        #suggestion-result pre, #card-list pre {
+            background-color: #f1f5f9; 
+            padding: 1rem; 
+            border-radius: 0.75rem;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+            border-left: 4px solid #6366f1;
+            overflow-x: auto;
+        }
+        #suggestion-result code, #card-list code {
+            font-family: 'Courier New', monospace;
+        }
+        /* Gradient background animation */
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient-shift 3s ease infinite;
+        }
+        /* Blink animation for delete confirmation */
+        @keyframes blink-red {
+            0%, 100% { color: #dc2626; transform: scale(1); }
+            50% { color: #ef4444; transform: scale(1.15); }
+        }
+        .blink-delete {
+            animation: blink-red 0.4s ease-in-out 4;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+
+<!-- Rename Card Modal -->
+<div id="rename-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-xl w-11/12 max-w-md card-shadow">
+        <h3 class="text-lg font-bold mb-4">Update Card Name</h3>
+        <input type="hidden" id="editing-card-id">
+        <input type="text" id="rename-card-name-input" placeholder="New Card Name" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeRenameModal()" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-150">Cancel</button>
+            <button onclick="updateCardName()" class="bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-150 font-medium">Save Name</button>
+        </div>
+    </div>
+</div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl w-11/12 max-w-md card-shadow">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                    </svg>
+                    Settings
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Gemini API Key</label>
+                <input type="password" id="api-key-input" placeholder="Enter your Gemini API Key (always hidden)" class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm">
+                <p class="text-xs text-gray-500">Get your API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-600 hover:underline">Google AI Studio</a></p>
+                <p class="text-xs text-amber-600 mt-1">🔒 Your API key is always hidden for security</p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <p class="text-xs text-blue-800">Your API key is stored locally on your device and never sent to any server except Google's Gemini API.</p>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeSettingsModal()" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-150">Cancel</button>
+                <button onclick="saveApiKey()" class="bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-150 font-medium">Save API Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Local Storage Implementation (No Firebase Needed) -->
+    <script type="module">
+        // --- SIMPLIFIED LOCAL STORAGE IMPLEMENTATION ---
+        // Using localStorage instead of Firebase for immediate functionality
+        let userId = 'local-user';
+    let cardList = [];
+        
+        // Initialize: Load cards from localStorage
+        function loadCardsFromStorage() {
+            const stored = localStorage.getItem('cardAdvisorCards');
+            if (stored) {
+                try {
+                    cardList = JSON.parse(stored);
+                } catch (e) {
+                    cardList = [];
+                }
+            }
+            renderCards();
+        }
+        
+        // Save cards to localStorage
+        function saveCardsToStorage() {
+            localStorage.setItem('cardAdvisorCards', JSON.stringify(cardList));
+        }
+        
+        // API Key Management
+        function getApiKey() {
+            return localStorage.getItem('geminiApiKey') || '';
+        }
+        
+        function saveApiKeyToStorage(apiKey) {
+            localStorage.setItem('geminiApiKey', apiKey);
+        }
+
+        function isApiKeyConfigured() {
+            return getApiKey().length > 0;
+        }
+
+        // Settings Modal Functions
+        window.openSettingsModal = function() {
+            const modal = document.getElementById('settings-modal');
+            const apiKeyInput = document.getElementById('api-key-input');
+            apiKeyInput.value = getApiKey();
+            modal.classList.remove('hidden');
+        };
+
+        window.closeSettingsModal = function() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        };
+
+        window.saveApiKey = function() {
+            const apiKeyInput = document.getElementById('api-key-input');
+            const apiKey = apiKeyInput.value.trim();
+            
+            if (!apiKey) {
+                showNotification("API key cannot be empty.", true);
+                return;
+            }
+            
+            if (!apiKey.startsWith('AIza')) {
+                showNotification("Invalid API key format. Gemini API keys should start with 'AIza'.", true);
+                return;
+            }
+            
+            saveApiKeyToStorage(apiKey);
+            showNotification("✅ API key saved successfully! You're all set.", false);
+            closeSettingsModal();
+            
+            // Reload the page to update the UI
+            location.reload();
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('auth-status').innerText = 'Ready (Local Storage)';
+            loadCardsFromStorage();
+            updateCardCount();
+            checkApiKeyStatus();
+        });
+
+        // Check and display API key status
+        function checkApiKeyStatus() {
+            if (!isApiKeyConfigured()) {
+                // Show setup required message on advisor tab
+                const resultDiv = document.getElementById('suggestion-result');
+                if (resultDiv) {
+                    resultDiv.innerHTML = getApiKeySetupMessage();
+                }
+            }
+        }
+
+        // Generate API key setup message with instructions
+        function getApiKeySetupMessage() {
+            return `
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl border-2 border-indigo-300 shadow-lg">
+                    <div class="text-center mb-6">
+                        <svg class="w-20 h-20 mx-auto text-indigo-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                        </svg>
+                        <h3 class="text-2xl font-bold text-indigo-900 mb-2">🔑 API Key Required</h3>
+                        <p class="text-indigo-700">To use Card Advisor AI, you need a free Google Gemini API key</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 mb-6 shadow-sm">
+                        <h4 class="font-bold text-gray-900 mb-4 flex items-center text-lg">
+                            <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">1</span>
+                            Get Your Free API Key
+                        </h4>
+                        <ol class="space-y-3 ml-8 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-indigo-600 mr-2">•</span>
+                                <span>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-600 font-semibold hover:underline">Google AI Studio</a></span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-indigo-600 mr-2">•</span>
+                                <span>Sign in with your Google account</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-indigo-600 mr-2">•</span>
+                                <span>Click <strong>"Create API Key"</strong></span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-indigo-600 mr-2">•</span>
+                                <span>Copy the generated key (starts with "AIza...")</span>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 mb-6 shadow-sm">
+                        <h4 class="font-bold text-gray-900 mb-4 flex items-center text-lg">
+                            <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">2</span>
+                            Add API Key to the App
+                        </h4>
+                        <ol class="space-y-3 ml-8 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-indigo-600 mr-2">•</span>
+                                <span>Click the <strong>⚙️ Settings</strong> icon in the top-right corner</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-indigo-600 mr-2">•</span>
+                                <span>Paste your API key in the text field</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-indigo-600 mr-2">•</span>
+                                <span>Click <strong>"Save API Key"</strong></span>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-semibold text-green-800">100% Free & Secure</p>
+                                <p class="text-xs text-green-700 mt-1">Google Gemini API is free to use. Your API key is stored locally on your device and is never shared with anyone.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="openSettingsModal()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition duration-150 font-semibold shadow-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                        </svg>
+                        Open Settings to Add API Key
+                    </button>
+                </div>
+            `;
+        }
+
+        // Tab Switching Function
+        window.switchTab = function(tab) {
+            const advisorTab = document.getElementById('advisor-tab-content');
+            const cardsTab = document.getElementById('cards-tab-content');
+            const advisorBtn = document.getElementById('advisor-tab-btn');
+            const cardsBtn = document.getElementById('cards-tab-btn');
+
+            if (tab === 'advisor') {
+                // Show advisor tab
+                advisorTab.classList.remove('hidden');
+                cardsTab.classList.add('hidden');
+                
+                // Update button styles
+                advisorBtn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+                advisorBtn.classList.remove('text-gray-600', 'hover:text-gray-800');
+                cardsBtn.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
+                cardsBtn.classList.add('text-gray-600', 'hover:text-gray-800');
+            } else {
+                // Show cards tab
+                advisorTab.classList.add('hidden');
+                cardsTab.classList.remove('hidden');
+                
+                // Update button styles
+                cardsBtn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+                cardsBtn.classList.remove('text-gray-600', 'hover:text-gray-800');
+                advisorBtn.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
+                advisorBtn.classList.add('text-gray-600', 'hover:text-gray-800');
+            }
+        };
+
+        // Update card count in tab badge
+        function updateCardCount() {
+            const countElement = document.getElementById('card-count');
+            if (countElement) {
+                countElement.textContent = cardList.length;
+            }
+        }
+
+        // --- UTILITY FUNCTIONS ---
+        function showNotification(message, isError) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `p-3 rounded-lg text-sm mb-4 transition-opacity duration-300 ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            notification.classList.remove('opacity-0', 'hidden');
+            setTimeout(() => {
+                notification.classList.add('opacity-0');
+                setTimeout(() => notification.classList.add('hidden'), 300);
+            }, 3000);
+        }
+        
+        // Display API usage statistics as bottom toast
+        function displayUsageStats(usage) {
+            if (!usage) return;
+            
+            const toastContainer = document.getElementById('usage-toast');
+            if (!toastContainer) return;
+            
+            const requestText = usage.requestCount === 1 ? '1 request' : `${usage.requestCount} requests`;
+            
+            toastContainer.innerHTML = `
+                <div class="bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center space-x-3 text-sm">
+                    <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <div class="font-semibold">${requestText} • ${usage.totalTokens.toLocaleString()} tokens</div>
+                        <div class="text-xs text-gray-400">Prompt: ${usage.promptTokens.toLocaleString()} • Response: ${usage.responseTokens.toLocaleString()}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Show toast
+            toastContainer.classList.remove('hidden', 'opacity-0');
+            toastContainer.classList.add('opacity-100');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                toastContainer.classList.remove('opacity-100');
+                toastContainer.classList.add('opacity-0');
+                setTimeout(() => {
+                    toastContainer.classList.add('hidden');
+                }, 300);
+            }, 3000);
+        }
+
+        // ENHANCED: Markdown to HTML Converter with Beautiful Styling + Table Support
+        function markdownToHtml(markdown) {
+            if (!markdown) return '';
+            let html = markdown;
+            
+            // 0a. COMPREHENSIVE LaTeX CLEANUP
+            // Common LaTeX math symbols
+            html = html.replace(/\$?\\times\$?/g, '×'); // \times or $\times$
+            html = html.replace(/\$?\\div\$?/g, '÷'); // \div
+            html = html.replace(/\$?\\pm\$?/g, '±'); // \pm
+            html = html.replace(/\$?\\cdot\$?/g, '·'); // \cdot
+            html = html.replace(/\$?\\approx\$?/g, '≈'); // \approx
+            html = html.replace(/\$?\\leq\$?/g, '≤'); // \leq
+            html = html.replace(/\$?\\geq\$?/g, '≥'); // \geq
+            html = html.replace(/\$?\\neq\$?/g, '≠'); // \neq
+            html = html.replace(/\$?\\infty\$?/g, '∞'); // \infty
+            
+            // Remove any remaining math mode delimiters
+            html = html.replace(/\$\$([^$]+)\$\$/g, '$1'); // $$...$$
+            html = html.replace(/\$([^$]+)\$/g, '$1'); // $...$
+            
+            // LaTeX text commands
+            html = html.replace(/\\text\{([^}]*)\}/g, '$1'); // \text{}
+            html = html.replace(/\\textbf\{([^}]*)\}/g, '**$1**'); // \textbf{}
+            html = html.replace(/\\textit\{([^}]*)\}/g, '*$1*'); // \textit{}
+            html = html.replace(/\\emph\{([^}]*)\}/g, '*$1*'); // \emph{}
+            
+            // Currency conversions
+            html = html.replace(/\\(?:dollars?|USD)/gi, '₹'); // \dollar, \USD
+            html = html.replace(/(\d+)\s*(?:dollars?|USD)/gi, '₹$1'); // "100 dollars"
+            
+            // Escaped characters
+            html = html.replace(/\\'/g, "'"); // Apostrophes
+            html = html.replace(/\\"/g, '"'); // Quotes
+            html = html.replace(/\\&/g, '&'); // Ampersands
+            html = html.replace(/\\%/g, '%'); // Percent
+            html = html.replace(/\\#/g, '#'); // Hash
+            
+            // Remove remaining backslashes
+            html = html.replace(/\\\\/g, ''); // Double backslashes
+            html = html.replace(/\\([a-zA-Z]+)/g, '$1'); // \command → command
+
+            // 0. CONVERT MARKDOWN TABLES TO MOBILE-FRIENDLY CARDS
+            html = html.replace(/\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)+)/g, (match, headerRow, bodyRows) => {
+                const headers = headerRow.split('|').map(h => h.trim()).filter(h => h);
+                const rows = bodyRows.trim().split('\n').map(row => 
+                    row.split('|').map(cell => cell.trim()).filter(cell => cell)
+                );
+                
+                let cardHtml = '<div class="my-4 space-y-3">';
+                rows.forEach(row => {
+                    cardHtml += '<div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-4 border-l-4 border-indigo-500 shadow-sm">';
+                    row.forEach((cell, i) => {
+                        if (headers[i] && cell) {
+                            cardHtml += `<div class="mb-2"><span class="font-bold text-indigo-700">${headers[i]}:</span> <span class="text-gray-800">${cell}</span></div>`;
+                        }
+                    });
+                    cardHtml += '</div>';
+                });
+                cardHtml += '</div>';
+                return cardHtml;
+            });
+
+            // 1. Handle headings (### Heading, ## Heading, # Heading)
+            html = html.replace(/^### (.*?)$/gm, '<h3 class="text-lg font-bold text-gray-800 mt-4 mb-2">$1</h3>');
+            html = html.replace(/^## (.*?)$/gm, '<h2 class="text-xl font-bold text-gray-900 mt-4 mb-2">$1</h2>');
+            html = html.replace(/^# (.*?)$/gm, '<h1 class="text-2xl font-bold text-gray-900 mt-4 mb-3">$1</h1>');
+
+            // 2. Handle bold (**text** or __text__) with emphasis color
+            html = html.replace(/\*\*(.*?)\*\*/gs, '<strong class="font-bold text-indigo-700">$1</strong>');
+            html = html.replace(/__(.*?)__/gs, '<strong class="font-bold text-indigo-700">$1</strong>');
+
+            // 3. Handle italic (*text* or _text_)
+            html = html.replace(/(?<!\*)\*(?!\*)([^*]+)\*(?!\*)/g, '<em class="italic text-gray-700">$1</em>');
+            html = html.replace(/(?<!_)_(?!_)([^_]+)_(?!_)/g, '<em class="italic text-gray-700">$1</em>');
+
+            // 4. Handle code blocks (```code```)
+            html = html.replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-3 rounded-lg my-2 text-sm overflow-x-auto"><code>$1</code></pre>');
+            
+            // 5. Handle inline code (`code`)
+            html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-pink-600">$1</code>');
+
+            // 6. Split into paragraphs
+        html = html.split(/(\r\n|\r|\n){2,}/).map(paragraph => {
+                paragraph = paragraph.trim();
+                if (!paragraph) return '';
+                
+                // Skip if already HTML tagged
+                if (paragraph.match(/^<(h1|h2|h3|pre|ul|ol|div)/)) {
+                    return paragraph;
+                }
+                
+                // Check if this paragraph contains list items
+                if (paragraph.match(/^(\*|-|\d+\.) /m)) {
+                return paragraph;
+            }
+                
+                // Convert single newlines to <br>
+            paragraph = paragraph.replace(/(\r\n|\r|\n)/g, '<br>');
+                return `<p class="mb-3 text-gray-700 leading-relaxed">${paragraph}</p>`;
+            }).filter(p => p).join('');
+            
+            // 7. Convert unordered list items (*, -, +)
+            html = html.replace(/^[*\-+] (.+)$/gm, '<li class="ml-4 mb-2 text-gray-700">• $1</li>');
+            
+            // 8. Convert numbered list items (1., 2., etc.)
+            html = html.replace(/^\d+\.\s+(.+)$/gm, '<li class="ml-4 mb-2 text-gray-700">$1</li>');
+            
+            // 9. Wrap consecutive <li> tags in <ul> or <ol>
+            html = html.replace(/(<li class="ml-4 mb-2 text-gray-700">.*?<\/li>\s*)+/gs, (match) => {
+                return `<ul class="space-y-1 my-3">${match}</ul>`;
+            });
+
+            // 10. Highlight numbers/amounts (₹ symbols, Rs, numbers with commas)
+            html = html.replace(/(₹[\d,]+|Rs\.?\s*[\d,]+)/g, '<span class="font-semibold text-green-600">$1</span>');
+            
+            // 11. Highlight percentages
+            html = html.replace(/(\d+(?:\.\d+)?%)/g, '<span class="font-semibold text-blue-600">$1</span>');
+
+            // 12. Clean up empty paragraphs
+            html = html.replace(/<p[^>]*>\s*<\/p>/g, '');
+            
+            // 13. Add special styling for card names (detect capitalized phrases)
+            html = html.replace(/\b([A-Z][A-Za-z]+ [A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)\b/g, 
+                '<span class="font-semibold text-indigo-800">$1</span>');
+
+        return html;
+    }
+
+    // NEW: Toggle Rules Visibility
+    window.toggleRules = function(cardId) {
+        const rulesContent = document.getElementById(`rules-content-${cardId}`);
+        const toggleIcon = document.getElementById(`toggle-icon-${cardId}`);
+
+        if (rulesContent.classList.contains('hidden')) {
+            rulesContent.classList.remove('hidden');
+            rulesContent.classList.add('pt-2', 'border-t', 'border-gray-100'); // Add border/padding when visible
+            toggleIcon.textContent = '▲'; // Up arrow
+        } else {
+            rulesContent.classList.add('hidden');
+            rulesContent.classList.remove('pt-2', 'border-t', 'border-gray-100');
+            toggleIcon.textContent = '▼'; // Down arrow
+        }
+    };
+
+    // NEW: Refresh Card Rules
+    window.refreshCardRules = async function(cardId, cardName) {
+            if (!isApiKeyConfigured()) {
+                showNotification("⚙️ Please configure your API key in Settings first.", true);
+                setTimeout(() => openSettingsModal(), 500);
+                return;
+            }
+            
+        const refreshButton = document.getElementById(`refresh-btn-${cardId}`);
+
+            refreshButton.disabled = true;
+            refreshButton.classList.add('opacity-50', 'cursor-not-allowed', 'animate-spin');
+            
+            const systemPrompt = `You are a financial information specialist with access to real-time web search. Your task is to:
+                1. Search the OFFICIAL BANK WEBSITE for the "${cardName}" credit card (e.g., HDFC Bank, SBI Card, ICICI, Axis Bank official sites).
+                2. Verify information from the bank's official reward program terms and conditions.
+                3. Provide a MOBILE-FRIENDLY summary using BULLET POINTS (no tables!) of verified information:
+                   - Reward Point (RP) earning rate per ₹100 or ₹150 spent (or Cashback %).
+                   - Accelerated/Bonus categories (e.g., Dining, Utility, Travel, Amazon).
+                   - Key Exclusions (e.g., Rent, Insurance, Fuel, Wallet loads).
+                   - Redemption value (e.g., 1 RP = ₹0.25).
+                4. FORMATTING RULES:
+                   - Use simple bullet points (- or *), NOT tables or complex formatting
+                   - Use bold (**text**) for emphasis
+                   - Keep lines short for mobile readability
+                   - Use clear section headings (### Heading)
+                   - ABSOLUTELY NO LaTeX: no $...$ math mode, no \\text{}, no \\times, no \\$
+                   - For multiplication use "×" or "x", NOT \\times or $\\times$
+                   - Write as plain text/Markdown only
+                5. CURRENCY RULES (CRITICAL):
+                   - ALL amounts must be in Indian Rupees (₹) ONLY
+                   - Never use $ or dollars - this is for INDIAN credit cards
+                   - Example: ₹100, ₹1,000, ₹50 cashback
+                6. Use ONLY official bank sources. If not found, state clearly.`;
+            
+            const userQuery = `Search the official bank website for "${cardName}" credit card (INDIAN market) and provide the current reward rules in RUPEES (₹). Format as simple bullet points for mobile. NO TABLES. NO LATEX.`;
+
+        const response = await fetchGeminiResponse(systemPrompt, userQuery);
+
+        if (response && response.text && response.text.length > 50) {
+                try {
+                    // Find and update the card in the list
+                    const cardIndex = cardList.findIndex(c => c.id === cardId);
+                    if (cardIndex !== -1) {
+                        cardList[cardIndex].rules = response.text;
+                        saveCardsToStorage();
+                        renderCards();
+                        showNotification(`Rules for '${cardName}' updated successfully!`, false);
+                        displayUsageStats(response.usage);
+                    }
+                } catch (error) {
+                    console.error("Error updating card rules:", error);
+                    showNotification("Failed to update card rules.", true);
+                }
+            } else {
+                showNotification(`Failed to retrieve reliable new rules for '${cardName}'.`, true);
+            }
+
+        refreshButton.disabled = false;
+        refreshButton.classList.remove('opacity-50', 'cursor-not-allowed', 'animate-spin');
+    };
+
+    // NEW: Delete Card Function
+    window.deleteCard = async function(cardId, cardName) {
+            // Add blink animation to the delete button
+            const deleteBtn = document.getElementById(`delete-btn-${cardId}`);
+            if (deleteBtn) {
+                deleteBtn.classList.add('blink-delete');
+            }
+            
+            // Show confirmation after a brief moment
+            setTimeout(() => {
+                if (confirm(`⚠️ Are you sure you want to delete "${cardName}"?\n\nThis action cannot be undone.`)) {
+                    try {
+                        cardList = cardList.filter(card => card.id !== cardId);
+                        saveCardsToStorage();
+                        renderCards();
+            showNotification(`Card '${cardName}' deleted successfully.`, false);
+        } catch (error) {
+            console.error("Error deleting card:", error);
+            showNotification(`Failed to delete card '${cardName}'.`, true);
+        }
+                } else {
+                    // Remove blink class if cancelled
+                    if (deleteBtn) {
+                        deleteBtn.classList.remove('blink-delete');
+                    }
+                }
+            }, 100);
+    };
+
+    // NEW: Rename Modal Functions
+    window.openRenameModal = function(cardId, currentName) {
+        document.getElementById('editing-card-id').value = cardId;
+        document.getElementById('rename-card-name-input').value = decodeURIComponent(currentName);
+        document.getElementById('rename-modal').classList.remove('hidden');
+    };
+
+    window.closeRenameModal = function() {
+        document.getElementById('rename-modal').classList.add('hidden');
+    };
+
+    window.updateCardName = async function() {
+        const cardId = document.getElementById('editing-card-id').value;
+        const newNameInput = document.getElementById('rename-card-name-input');
+        const newName = newNameInput.value.trim();
+
+        if (!newName) {
+            showNotification("Card name cannot be empty.", true);
+            return;
+        }
+            
+            try {
+                // Find and update the card name
+                const cardIndex = cardList.findIndex(c => c.id === cardId);
+                if (cardIndex !== -1) {
+                    cardList[cardIndex].name = newName;
+                    saveCardsToStorage();
+                    renderCards();
+            showNotification(`Card successfully renamed to '${newName}'.`, false);
+            closeRenameModal();
+                }
+        } catch (error) {
+            console.error("Error updating card name:", error);
+            showNotification("Failed to update card name.", true);
+        }
+    };
+
+    // Handles the Gemini API request with retry logic
+    async function fetchGeminiResponse(systemPrompt, userQuery) {
+            const apiKey = getApiKey(); // Get API key from localStorage or use default
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        const maxRetries = 4;
+        let attempt = 0;
+            let lastError = null;
+            let requestCount = 0; // Track number of actual API calls
+
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            tools: [{ "google_search": {} }], // Use Google Search for up-to-date card info
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+        };
+
+        while (attempt < maxRetries) {
+            try {
+                    console.log(`Attempt ${attempt + 1}/${maxRetries} to call Gemini API...`);
+                    requestCount++; // Increment for each actual API call
+                    
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                    
+                    console.log(`API Response status: ${response.status}`);
+
+                if (response.status === 429) {
+                    const delay = Math.pow(2, attempt) * 1000;
+                    console.warn(`Rate limit hit. Retrying in ${delay}ms...`);
+                        showNotification(`Rate limited. Retrying in ${delay/1000}s...`, true);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    attempt++;
+                    continue;
+                }
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error(`API Error ${response.status}:`, errorText);
+                        lastError = `API Error ${response.status}: ${errorText.substring(0, 100)}`;
+                    attempt++;
+                    continue;
+                }
+
+                const result = await response.json();
+                    console.log('API response parsed successfully');
+                    
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                const usage = result.usageMetadata || {};
+
+                if (text && text.length > 50) {
+                        console.log('Valid response received, length:', text.length);
+                        console.log('Token usage:', usage);
+                        console.log('Total API requests made:', requestCount);
+                    return {
+                        text: text,
+                        usage: {
+                            promptTokens: usage.promptTokenCount || 0,
+                            responseTokens: usage.candidatesTokenCount || 0,
+                            totalTokens: usage.totalTokenCount || 0,
+                            requestCount: requestCount
+                        }
+                    };
+                    } else {
+                        console.warn('Response too short or invalid:', text);
+                        lastError = 'Response too short or invalid';
+                }
+
+            } catch (error) {
+                    console.error(`API Error on attempt ${attempt + 1}:`, error);
+                    lastError = error.message;
+                    showNotification(`Error: ${error.message}. Retrying...`, true);
+            }
+            attempt++;
+                
+                // Wait a bit before retrying (except on last attempt)
+                if (attempt < maxRetries) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+            
+            console.error('All retry attempts failed. Last error:', lastError);
+            if (lastError) {
+                showNotification(`All attempts failed: ${lastError}`, true);
+            }
+            return null;
+        }
+
+        // --- NO FIREBASE NEEDED - Using localStorage ---
+        // Cards are automatically loaded on page load (see DOMContentLoaded above)
+        
+        // Function to look up card rules using AI and save to localStorage
+    window.fetchAndSaveCardRules = async function() {
+        const cardNameInput = document.getElementById('card-name');
+        const cardName = cardNameInput.value.trim();
+        const saveButton = document.getElementById('save-card-button');
+            
+            if (!isApiKeyConfigured()) {
+                showNotification("⚙️ Please configure your API key in Settings first.", true);
+                setTimeout(() => openSettingsModal(), 500);
+                return;
+            }
+
+        if (!cardName) {
+            showNotification("Please enter the exact name of your credit card.", true);
+            return;
+        }
+
+            saveButton.disabled = true;
+            saveButton.textContent = 'Searching bank website...';
+
+            const systemPrompt = `You are a financial information specialist with access to real-time web search. Your task is to:
+                1. Search the OFFICIAL BANK WEBSITE for the "${cardName}" credit card (e.g., HDFC Bank, SBI Card, ICICI, Axis Bank official sites).
+                2. Verify information from the bank's official reward program terms and conditions.
+                3. Provide a MOBILE-FRIENDLY summary using BULLET POINTS (no tables!) of verified information:
+                   - Reward Point (RP) earning rate per ₹100 or ₹150 spent (or Cashback %).
+                   - Accelerated/Bonus categories (e.g., Dining, Utility, Travel, Amazon).
+                   - Key Exclusions (e.g., Rent, Insurance, Fuel, Wallet loads).
+                   - Redemption value (e.g., 1 RP = ₹0.25).
+                4. FORMATTING RULES:
+                   - Use simple bullet points (- or *), NOT tables or complex formatting
+                   - Use bold (**text**) for emphasis
+                   - Keep lines short for mobile readability
+                   - Use clear section headings (### Heading)
+                   - ABSOLUTELY NO LaTeX: no $...$ math mode, no \\text{}, no \\times, no \\$
+                   - For multiplication use "×" or "x", NOT \\times or $\\times$
+                   - Write as plain text/Markdown only
+                5. CURRENCY RULES (CRITICAL):
+                   - ALL amounts must be in Indian Rupees (₹) ONLY
+                   - Never use $ or dollars - this is for INDIAN credit cards
+                   - Example: ₹100, ₹1,000, ₹50 cashback
+                6. Use ONLY official bank sources. If not found, state clearly.`;
+            
+            const userQuery = `Search the official bank website for "${cardName}" credit card (INDIAN market) and provide the current reward rules in RUPEES (₹). Format as simple bullet points for mobile. NO TABLES. NO LATEX.`;
+
+            const response = await fetchGeminiResponse(systemPrompt, userQuery);
+
+        if (response && response.text && response.text.length > 50) {
+            try {
+                // Use a clean, lowercase version of the card name as the document ID
+                const cardId = cardName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                    
+                    // Add or update card in the list
+                    const existingIndex = cardList.findIndex(c => c.id === cardId);
+                    if (existingIndex !== -1) {
+                        cardList[existingIndex] = { id: cardId, name: cardName, rules: response.text };
+                    } else {
+                        cardList.push({ id: cardId, name: cardName, rules: response.text });
+                    }
+                    
+                    saveCardsToStorage();
+                    renderCards();
+                cardNameInput.value = '';
+                showNotification(`Card '${cardName}' saved!`, false);
+                
+                // Show usage stats toast
+                displayUsageStats(response.usage);
+            } catch (error) {
+                console.error("Error saving card:", error);
+                showNotification("Failed to save card to database.", true);
+            }
+        } else {
+            showNotification(`Could not retrieve reliable rules for '${cardName}'. Please check the name or try again.`, true);
+        }
+
+        saveButton.disabled = false;
+        saveButton.textContent = 'Fetch & Save Card Rules';
+    }
+
+    // Function to render the cards in the UI
+    function renderCards() {
+        const container = document.getElementById('card-list');
+        container.innerHTML = '';
+            
+            // Update card count badge
+            updateCardCount();
+
+        if (cardList.length === 0) {
+                container.innerHTML = '<div class="text-center p-8 bg-gray-50 rounded-xl"><svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg><p class="text-gray-500 text-lg font-semibold">No cards added yet</p><p class="text-gray-400 text-sm mt-2">Add your first card to get started!</p></div>';
+            return;
+        }
+
+        cardList.forEach(card => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'bg-white p-4 rounded-lg card-shadow mb-3 border-l-4 border-indigo-500';
+
+            // Use markdownToHtml for rendering the rules summary
+            const renderedRules = markdownToHtml(card.rules);
+
+            // Encode card name for safe use in string parameters
+            const encodedCardName = encodeURIComponent(card.name);
+
+            cardEl.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div class="flex-grow">
+                        <h3 class="font-bold text-lg text-gray-900 flex items-center">
+                            ${card.name}
+
+                            <!-- Edit Button (Pencil Icon) -->
+                            <button onclick="openRenameModal('${card.id}', '${encodedCardName}')" class="ml-2 text-gray-500 hover:text-indigo-600 transition duration-150">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.794.794-.741-.741-.047-.047L9.5 7.914l-4.75 4.75a.5.5 0 00-.13.332l-.123 1.954a.5.5 0 00.56.56l1.954-.123a.5.5 0 00.332-.13l4.75-4.75 3.5-3.5a1 1 0 000-1.414zM15 4a1 1 0 10-2 0h2z" clip-rule="evenodd" fill-rule="evenodd"/>
+                                </svg>
+                            </button>
+                        </h3>
+
+                        <button onclick="toggleRules('${card.id}')" class="text-sm text-indigo-600 hover:underline mt-1">
+                            View Rules <span id="toggle-icon-${card.id}" class="ml-1 transition duration-150 transform inline-block">▼</span>
+                        </button>
+                    </div>
+
+                    <!-- Action Buttons (Refresh and Delete) -->
+                    <div class="flex space-x-2 ml-4">
+                            <!-- Refresh Button (Circular Arrow - Indigo) -->
+                            <button id="refresh-btn-${card.id}" onclick="refreshCardRules('${card.id}', decodeURIComponent('${encodedCardName}'))" class="text-indigo-600 hover:text-indigo-700 p-1.5 rounded-full hover:bg-indigo-50 transition duration-150" title="Update Card Rules from Bank Website">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                            </svg>
+                        </button>
+
+                            <!-- Delete Button (Trash Icon - Red) -->
+                            <button id="delete-btn-${card.id}" onclick="deleteCard('${card.id}', decodeURIComponent('${encodedCardName}'))" class="text-red-600 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 transition duration-150" title="Delete Card">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="rules-content-${card.id}" class="hidden text-sm text-gray-600 p-3 pt-3 mt-3 border-t border-gray-200">
+                    ${renderedRules}
+                </div>
+            `;
+            container.appendChild(cardEl);
+        });
+    }
+
+
+    // --- GEMINI API CALL LOGIC (Suggestion) ---
+
+    window.generateSuggestion = async function() {
+        const purchaseQuery = document.getElementById('purchase-query').value.trim();
+        const resultDiv = document.getElementById('suggestion-result');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const submitButton = document.getElementById('submit-query');
+
+            if (!isApiKeyConfigured()) {
+                showNotification("⚙️ Please configure your API key in Settings first.", true);
+                resultDiv.innerHTML = getApiKeySetupMessage();
+                return;
+            }
+
+        if (cardList.length === 0) {
+            showNotification("Please add at least one credit card before asking for advice.", true);
+                resultDiv.innerHTML = `
+                    <div class="bg-amber-50 p-6 border-2 border-amber-300 rounded-2xl shadow-lg">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-amber-600 mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-amber-900 font-semibold mb-2">No cards in your portfolio</p>
+                                <p class="text-amber-800 text-sm mb-3">Please add at least one credit card to get personalized recommendations.</p>
+                                <button onclick="switchTab('cards')" class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition text-sm font-medium">
+                                    Go to My Cards
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            return;
+        }
+        if (!purchaseQuery) {
+            showNotification("Please describe your purchase (e.g., 'buying groceries at BigBasket').", true);
+            return;
+        }
+
+            try {
+        // Prepare the prompt
+        const cardDataString = cardList.map(c => `Card Name: ${c.name}\nRules: ${c.rules}`).join('\n---\n');
+
+        const systemPrompt = `You are a world-class financial analyst and credit card rewards expert for the INDIAN market. Your goal is to help the user maximize their savings.
+            
+            ANALYZE: The provided INDIAN credit cards and their specific reward rules.
+            IDENTIFY: The SINGLE best card for the user's purchase query.
+            EXPLAIN: The maximum reward/cashback value they'll receive, referencing the specific rule/MCC.
+            COMPARE: If two cards are close, mention the second-best option and why it's inferior.
+            
+            FORMATTING RULES FOR MOBILE:
+            - Use bullet points (- or *), NO tables
+            - Use bold (**text**) for emphasis (card names, amounts)
+            - Keep lines short and scannable
+            - Use section headings (### Best Card)
+            - Show calculations clearly: "5% of ₹1000 = ₹50 cashback"
+            - Use emojis sparingly for visual appeal (✅, 💰, 🎯)
+            - Use ONLY plain Markdown, NO LaTeX formatting (no \\text{}, no \\$, etc.)
+            
+            CURRENCY RULES (CRITICAL):
+            - ALL amounts MUST be in Indian Rupees (₹) ONLY
+            - This is for INDIAN credit cards - NEVER use $ or dollars
+            - Example: ₹100, ₹1,000, ₹50 cashback (NOT $50)
+            - Show calculations in rupees: "5% of ₹2000 = ₹100"
+
+            Card Portfolio (Use this data for analysis):
+            ---
+            ${cardDataString}
+            ---
+        `;
+
+        const userQuery = `I am planning to make the following purchase in INDIA: "${purchaseQuery}". Given my INDIAN card portfolio above, which card should I use to maximize my effective reward rate (Cashback/Points)? State the reward calculation clearly in RUPEES (₹). FORMAT YOUR RESPONSE FOR MOBILE - NO TABLES. NO LATEX.`;
+
+        // Show loading and disable button
+        loadingIndicator.classList.remove('hidden');
+        submitButton.disabled = true;
+                submitButton.textContent = 'Analyzing...';
+        resultDiv.innerHTML = '<p class="text-gray-500 p-4 text-center">Thinking...</p>';
+
+                console.log('Calling Gemini API for suggestion...');
+        const response = await fetchGeminiResponse(systemPrompt, userQuery);
+                console.log('Gemini response received:', response ? 'Success' : 'Failed');
+
+        if (response && response.text) {
+             // Convert the Markdown response to HTML before inserting
+             const htmlResult = markdownToHtml(response.text);
+                     resultDiv.innerHTML = `
+                        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-2xl border-2 border-indigo-200 shadow-lg">
+                            <div class="flex items-center mb-4 pb-3 border-b border-indigo-200">
+                                <svg class="w-6 h-6 text-indigo-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                <h3 class="text-lg font-bold text-indigo-900">💡 Best Card Recommendation</h3>
+                            </div>
+                            <div class="prose prose-sm max-w-none">
+                                ${htmlResult}
+                            </div>
+                        </div>
+                     `;
+                     showNotification(`✅ Recommendation ready!`, false);
+                     
+                     // Show usage stats toast
+                     displayUsageStats(response.usage);
+        } else {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-50 p-6 border-2 border-red-300 rounded-2xl shadow-lg">
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                <p class="text-red-700 font-semibold">Sorry, the AI service failed to provide a reliable suggestion. Please try again.</p>
+                            </div>
+                        </div>
+                    `;
+                    showNotification("Failed to generate recommendation. Please try again.", true);
+                }
+            } catch (error) {
+                console.error("Error in generateSuggestion:", error);
+                resultDiv.innerHTML = `<div class="text-red-600 p-4 border border-red-300 rounded-xl">❌ Error: ${error.message}</div>`;
+                showNotification(`Error: ${error.message}`, true);
+            } finally {
+                // Always re-enable button and hide loading indicator
+        loadingIndicator.classList.add('hidden');
+        submitButton.disabled = false;
+                submitButton.textContent = 'Get Best Card Suggestion';
+            }
+    }
+
+</script>
+
+<!-- HEADER -->
+    <header class="w-full max-w-2xl py-4 px-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <!-- App Icon -->
+            <svg class="w-12 h-12 flex-shrink-0" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="cardGradHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect x="80" y="140" width="352" height="220" rx="24" fill="url(#cardGradHeader)"/>
+                <rect x="80" y="180" width="352" height="50" fill="#1f2937" opacity="0.7"/>
+                <rect x="120" y="270" width="60" height="48" rx="6" fill="#fbbf24"/>
+                <line x1="130" y1="275" x2="130" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+                <line x1="142" y1="275" x2="142" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+                <line x1="154" y1="275" x2="154" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+                <line x1="166" y1="275" x2="166" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+                <circle cx="120" cy="340" r="5" fill="#ffffff"/>
+                <circle cx="138" cy="340" r="5" fill="#ffffff"/>
+                <circle cx="156" cy="340" r="5" fill="#ffffff"/>
+                <circle cx="174" cy="340" r="5" fill="#ffffff"/>
+                <g transform="translate(380, 150)">
+                    <path d="M 0,-35 L 6,-12 L 30,-6 L 6,0 L 0,24 L -6,0 L -30,-6 L -6,-12 Z" fill="#fbbf24"/>
+                    <circle cx="0" cy="-6" r="4" fill="#ffffff"/>
+                </g>
+                <rect x="340" y="300" width="70" height="40" rx="20" fill="#10b981"/>
+                <text x="375" y="327" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">AI</text>
+        </svg>
+            
+            <!-- App Name -->
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">Card Advisor</h1>
+                <p class="text-xs text-gray-500" id="auth-status">Initializing...</p>
+            </div>
+        </div>
+        
+        <!-- Settings Button -->
+        <button onclick="openSettingsModal()" class="p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition duration-150" title="Settings">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+</header>
+
+    <div id="notification" class="w-full max-w-2xl opacity-0 hidden" role="alert"></div>
+
+    <!-- TAB NAVIGATION -->
+    <div class="w-full max-w-2xl mb-6">
+        <div class="flex bg-gray-100 rounded-xl p-1 card-shadow">
+            <button id="advisor-tab-btn" onclick="switchTab('advisor')" class="flex-1 py-3 px-4 rounded-lg font-semibold transition duration-200 bg-white text-indigo-600 shadow-sm">
+                <span class="flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                    Advisor
+                </span>
+            </button>
+            <button id="cards-tab-btn" onclick="switchTab('cards')" class="flex-1 py-3 px-4 rounded-lg font-semibold transition duration-200 text-gray-600 hover:text-gray-800">
+                <span class="flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
+                    </svg>
+                    My Cards (<span id="card-count">0</span>)
+                </span>
+        </button>
+    </div>
+    </div>
+
+    <!-- ADVISOR TAB CONTENT -->
+    <div id="advisor-tab-content" class="w-full max-w-2xl">
+<!-- AI ADVISOR QUERY SECTION -->
+        <section class="mb-8">
+    <div class="bg-white p-6 rounded-xl card-shadow border border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                    </svg>
+                    What are you purchasing?
+                </h2>
+                <textarea id="purchase-query" rows="3" placeholder="Describe your purchase... (e.g., 'Buying groceries at BigBasket for Rs 5,000' or 'Paying LIC premium Rs 20,000 online')" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"></textarea>
+                
+                <button id="submit-query" onclick="generateSuggestion()" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-lg hover:from-green-700 hover:to-emerald-700 transition duration-150 font-semibold flex items-center justify-center shadow-md">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+            Get Best Card Suggestion
+        </button>
+    </div>
+</section>
+
+<!-- RESULTS SECTION -->
+        <section>
+            <div id="loading-indicator" class="hidden text-center p-6 bg-white rounded-xl card-shadow">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-indigo-600 inline-block mb-3"></div>
+                <p class="text-indigo-600 font-semibold">Analyzing your portfolio...</p>
+            </div>
+            <div id="suggestion-result">
+                <div class="bg-gray-50 p-8 text-center border-2 border-dashed border-gray-300 rounded-xl">
+                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    <p class="text-gray-500 text-lg">Your AI recommendation will appear here</p>
+                    <p class="text-gray-400 text-sm mt-2">Enter your purchase details above to get started</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- MY CARDS TAB CONTENT -->
+    <div id="cards-tab-content" class="w-full max-w-2xl hidden">
+        <!-- ADD CARD SECTION -->
+        <section class="mb-6">
+            <div class="bg-white p-6 rounded-xl card-shadow border border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"/>
+                    </svg>
+                    Add New Card
+                </h2>
+                <input type="text" id="card-name" placeholder="Enter Card Name (e.g., HDFC Millennia, SBI Pulse)" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <button id="save-card-button" onclick="fetchAndSaveCardRules()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition duration-150 font-semibold shadow-md">
+                    <span class="flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                        </svg>
+                        Fetch & Save Card Rules
+                    </span>
+                </button>
+    </div>
+</section>
+
+        <!-- DISPLAY CARDS -->
+        <section>
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Your Card Portfolio</h2>
+            <div id="card-list" class="scrollable-cards max-h-96 overflow-y-auto space-y-3">
+                <p class="text-gray-500 text-center p-8 bg-gray-50 rounded-xl">Loading card list...</p>
+            </div>
+        </section>
+    </div>
+
+<!-- Bottom Toast for API Usage Stats -->
+<div id="usage-toast" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-300"></div>
+
+</body>
+</html>

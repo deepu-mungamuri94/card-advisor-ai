@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Credit Card -->
+  <rect x="80" y="140" width="352" height="220" rx="24" fill="url(#cardGrad)"/>
+  
+  <!-- Card magnetic stripe -->
+  <rect x="80" y="180" width="352" height="50" fill="#1f2937" opacity="0.7"/>
+  
+  <!-- Card chip -->
+  <rect x="120" y="270" width="60" height="48" rx="6" fill="#fbbf24"/>
+  <line x1="130" y1="275" x2="130" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+  <line x1="142" y1="275" x2="142" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+  <line x1="154" y1="275" x2="154" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+  <line x1="166" y1="275" x2="166" y2="313" stroke="#1f2937" stroke-width="2.5"/>
+  
+  <!-- Card number dots -->
+  <circle cx="120" cy="340" r="5" fill="#ffffff"/>
+  <circle cx="138" cy="340" r="5" fill="#ffffff"/>
+  <circle cx="156" cy="340" r="5" fill="#ffffff"/>
+  <circle cx="174" cy="340" r="5" fill="#ffffff"/>
+  
+  <circle cx="210" cy="340" r="5" fill="#ffffff"/>
+  <circle cx="228" cy="340" r="5" fill="#ffffff"/>
+  <circle cx="246" cy="340" r="5" fill="#ffffff"/>
+  <circle cx="264" cy="340" r="5" fill="#ffffff"/>
+  
+  <!-- AI Sparkle/Star icon -->
+  <g transform="translate(380, 150)">
+    <path d="M 0,-35 L 6,-12 L 30,-6 L 6,0 L 0,24 L -6,0 L -30,-6 L -6,-12 Z" fill="#fbbf24"/>
+    <circle cx="0" cy="-6" r="4" fill="#ffffff"/>
+  </g>
+  
+  <!-- AI Badge -->
+  <rect x="340" y="300" width="70" height="40" rx="20" fill="#10b981"/>
+  <text x="375" y="327" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">AI</text>
+</svg>
+
